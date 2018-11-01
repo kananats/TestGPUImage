@@ -8,12 +8,12 @@
 
 import Foundation
 import UIKit
-import ReactiveSwift
 import ReactiveCocoa
+import ReactiveSwift
 
 extension MovieMaker.Record {
     final class RecordButton: UIButton {
-        lazy var isRecording: BindingTarget<Bool> = {
+        private lazy var isRecording: BindingTarget<Bool> = {
             return BindingTarget(lifetime: self.reactive.lifetime) { [weak self] value in
                 self?.updateLayout(isRecording: value)
             }
@@ -56,6 +56,18 @@ extension MovieMaker.Record {
         
         required init?(coder aDecoder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
+        }
+        
+        @discardableResult
+        func bind(_ viewModel: ViewModel) -> Disposable {
+            let disposable = CompositeDisposable()
+            
+            disposable += self.isRecording <~ viewModel.isRecording
+            
+            print("kdev alrdbind")
+            self.reactive.pressed = CocoaAction(viewModel.recordAction)
+            
+            return disposable
         }
     }
 }

@@ -36,18 +36,20 @@ extension MovieMaker.Record {
         let previewOutput = GammaAdjustment()
         
         private var movieOutput: MovieOutput!
+        private var fileURL: URL!
         let movieOutputUrl = Signal<URL, NSError>.pipe()
+        
+        lazy var orientation: MutableProperty<ImageOrientation> = {
+            let orientation = ImageOrientation.from(deviceOrientation: UIDevice.current.orientation) ?? .portrait
+            return MutableProperty(orientation)
+        }()
         
         let isRecording = MutableProperty<Bool>(false)
         
-        lazy var startRecording: Action<Void, Void, NoError> = {
-            return Action(enabledIf: !self.isRecording) { _ in .empty }
+        lazy var recordAction: Action<Void, Void, NoError> = {
+            return .single()//(enabledIf: !self.isRecording)
         }()
-        
-        lazy var stopRecording: Action<Void, Void, NoError> = {
-            return Action(enabledIf: self.isRecording) { _ in .empty }
-        }()
-        
+
         init?() {
             guard self.camera != nil else { return nil }
             
@@ -69,48 +71,49 @@ extension MovieMaker.Record {
                 current! --> `self`.previewOutput
             }
             
-            disposable += self.startRecording.values.observeValues { [weak self] _ in
+            // Start/stop recording
+            disposable += self.recordAction.values.observeValues { [weak self] _ in
                 guard let `self` = self else { return }
                 
-                do {
-                    try `self`.record(true)
+                if `self`.isRecording.value {
+                    `self`.stopRecording()
+                    return
                 }
+                
+                do { try `self`.startRecording() }
                 catch let error as NSError {
                     `self`.movieOutputUrl.input.send(error: error)
                 }
             }
-            
-            disposable += self.stopRecording.values.observeValues { [weak self] _ in
-                guard let `self` = self else { return }
-                `self`.isRecording.swap(false)
-            }
-            
+
             return disposable
-        }
-        
-        func record(_ recording: Bool) throws {
-            if recording {
-                let directory = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-                let fileURL = URL(string: "test.mp4", relativeTo: directory)!
-                try FileManager.default.removeItem(at:fileURL)
-                
-                self.movieOutput = try MovieOutput(URL:fileURL, size: Size(width: 480, height: 640), liveVideo: true)
-                self.camera.audioEncodingTarget = self.movieOutput
-                self.previewOutput --> self.movieOutput!
-                self.movieOutput!.startRecording()
-            }
-            else {
-                self.movieOutput!.finishRecording {
-                    self.camera.audioEncodingTarget = nil
-                    self.movieOutput = nil
-                }
-            }
-            self.isRecording.swap(recording)
         }
     }
 }
 
 // Private
 private extension MovieMaker.Record.ViewModel {
+    func startRecording() throws {
+        let directory = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        
+        self.fileURL = URL(string: "test.mp4", relativeTo: directory)
+        try? FileManager.default.removeItem(at: self.fileURL)
+        
+        self.movieOutput = try MovieOutput(URL: self.fileURL, size: Size(width: 480, height: 640), liveVideo: true)
+        self.camera.audioEncodingTarget = self.movieOutput!
+        self.previewOutput --> self.movieOutput!
+        self.movieOutput!.startRecording()
+        
+        self.isRecording.swap(true)
+    }
     
+    func stopRecording() {
+        self.movieOutput!.finishRecording {
+            self.camera.audioEncodingTarget = nil
+            self.movieOutput = nil
+            self.movieOutputUrl.input.send(value: self.fileURL)
+            
+            self.isRecording.swap(false)
+        }
+    }
 }
