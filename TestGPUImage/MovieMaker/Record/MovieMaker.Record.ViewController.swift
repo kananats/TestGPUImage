@@ -15,17 +15,14 @@ import CoreMedia
 
 extension MovieMaker.Record {
     final class ViewController: UIViewController {
-        private lazy var viewModel: ViewModel! = {
-            guard let viewModel = ViewModel() else { return nil }
-            
-            return viewModel
-        }()
+        private lazy var viewModel: ViewModel! = { return ViewModel() }()
         
         private lazy var cameraControl: CameraControl = { return CameraControl() }()
         
         private lazy var renderView: RenderView = {
             let renderView = RenderView()
             renderView.fillMode = .stretch
+            
             return renderView
         }()
     }
