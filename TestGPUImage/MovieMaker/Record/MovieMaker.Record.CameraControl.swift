@@ -8,16 +8,20 @@
 
 import Foundation
 import UIKit
+import GPUImage
 import ReactiveCocoa
 import ReactiveSwift
 
 extension MovieMaker.Record {
     final class CameraControl: UIView {
         private lazy var recordButton: RecordButton = { return RecordButton() }()
-        
-        private lazy var switchButton: UIButton = {
+
+        private lazy var cameraSwitchButton: UIButton = {
             let button = UIButton()
-            button.setTitleColor(.white, for: .normal)
+            button.backgroundColor = UIColor.black.withAlphaComponent(0.70)
+            button.layer.cornerRadius = 20
+            button.clipsToBounds = true
+            button.setImage(UIImage(named: "icoCamera")!, for: .normal)
             return button
         }()
         
@@ -30,12 +34,10 @@ extension MovieMaker.Record {
         
         override init(frame: CGRect = .zero) {
             super.init(frame: frame)
-            
-            self.addSubview(self.recordButton)
-            self.addSubview(self.switchButton)
-            self.addSubview(self.closeButton)
+
+            self.createLayout()
         }
-        
+
         required init?(coder aDecoder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
@@ -46,6 +48,9 @@ extension MovieMaker.Record {
             
             disposable += self.recordButton.bind(viewModel)
             
+            // Orientation handler
+            disposable += self.orientation <~ viewModel.orientation
+            
             self.closeButton.reactive.pressed = CocoaAction(viewModel.recordAction)
             
             return disposable
@@ -53,29 +58,47 @@ extension MovieMaker.Record {
     }
 }
 
-extension MovieMaker.Record.CameraControl {
-    override func didMoveToSuperview() {
-        super.didMoveToSuperview()
+private extension MovieMaker.Record.CameraControl {
+
+    var orientation: BindingTarget<ImageOrientation> {
+        return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
+    }
+    
+    func createLayout() {
+        guard self.recordButton.superview == nil,
+            self.cameraSwitchButton.superview == nil,
+            self.closeButton.superview == nil
+            else { fatalError() }
+        
+        self.addSubview(self.recordButton)
+        self.addSubview(self.cameraSwitchButton)
+        self.addSubview(self.closeButton)
+
+        self.updateLayout(.portrait)
+    }
+    
+    func updateLayout(_ orientation: ImageOrientation) {
+        switch orientation {
+        case .landscapeLeft, .landscapeRight: `self`.updateLandscapeLayout()
+        default: `self`.updatePortraitLayout()
+        }
         
         self.recordButton.snp.makeConstraints { make in
+            make.width.height.equalTo(81)
+        }
+    }
+    
+    func updatePortraitLayout() {
+        self.recordButton.snp.remakeConstraints { make in
+            make.bottom.equalToSuperview().offset(-40)
             make.centerX.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-15)
-            make.width.equalTo(50)
-            make.height.equalTo(50)
         }
-        
-        self.switchButton.snp.makeConstraints { make in
-            make.left.equalToSuperview().offset(85)
-            make.bottom.equalToSuperview().offset(-15)
-            make.width.equalTo(50)
-            make.height.equalTo(50)
-        }
-        
-        self.closeButton.snp.makeConstraints { make in
-            make.right.equalToSuperview().offset(-15)
-            make.top.equalToSuperview().offset(15)
-            make.width.equalTo(50)
-            make.height.equalTo(50)
+    }
+    
+    func updateLandscapeLayout() {
+        self.recordButton.snp.remakeConstraints { make in
+            make.right.equalToSuperview().offset(-6)
+            make.centerY.equalToSuperview()
         }
     }
 }

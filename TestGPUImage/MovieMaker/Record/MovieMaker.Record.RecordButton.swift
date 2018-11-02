@@ -13,11 +13,6 @@ import ReactiveSwift
 
 extension MovieMaker.Record {
     final class RecordButton: UIButton {
-        private lazy var isRecording: BindingTarget<Bool> = {
-            return BindingTarget(lifetime: self.reactive.lifetime) { [weak self] value in
-                self?.updateLayout(isRecording: value)
-            }
-        }()
         
         var enableColor = UIColor(red: 247.0 / 255.0, green: 9.0 / 255.0, blue: 128.0 / 255.0, alpha: 0.9) {
             didSet { self.isEnabled = super.isEnabled }
@@ -48,27 +43,26 @@ extension MovieMaker.Record {
         override init(frame: CGRect = .zero) {
             super.init(frame: frame)
             
-            self.layer.addSublayer(self.backgroundLayer)
-            self.layer.addSublayer(self.foregroundLayer)
-            
-            self.updateLayout(isRecording: false)
+            self.createLayout()
         }
         
         required init?(coder aDecoder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
+    }
+}
+
+// Public
+extension MovieMaker.Record.RecordButton {
+    @discardableResult
+    func bind(_ viewModel: MovieMaker.Record.ViewModel) -> Disposable {
+        let disposable = CompositeDisposable()
         
-        @discardableResult
-        func bind(_ viewModel: ViewModel) -> Disposable {
-            let disposable = CompositeDisposable()
-            
-            disposable += self.isRecording <~ viewModel.isRecording
-            
-            print("kdev alrdbind")
-            self.reactive.pressed = CocoaAction(viewModel.recordAction)
-            
-            return disposable
-        }
+        self.isRecording <~ viewModel.isRecording
+        
+        self.reactive.pressed = CocoaAction(viewModel.recordAction)
+        
+        return disposable
     }
 }
 
@@ -81,17 +75,20 @@ extension MovieMaker.Record.RecordButton {
             self.foregroundLayer.backgroundColor = self.isEnabled ? self.enableColor.cgColor : self.disableColor.cgColor;
         }
     }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        self.updateLayout(isRecording: false)
-    }
 }
 
 // Private
-private extension MovieMaker.Record.RecordButton {
-    func updateLayout(isRecording: Bool) {
+extension MovieMaker.Record.RecordButton {
+    func createLayout() {
+        guard self.backgroundLayer.superlayer == nil,
+            self.foregroundLayer.superlayer == nil
+            else { fatalError() }
+        
+        self.layer.addSublayer(self.backgroundLayer)
+        self.layer.addSublayer(self.foregroundLayer)
+    }
+    
+    func updateLayout(_ isRecording: Bool) {
         var margin: Double = 8
         var backgroundMargin: Double = 0
         let width = Double(self.frame.width)
@@ -112,6 +109,10 @@ private extension MovieMaker.Record.RecordButton {
         
         self.foregroundLayer.frame = CGRect(x: margin, y: margin, width: width - margin * 2, height: height - margin * 2)
         self.foregroundLayer.cornerRadius = CGFloat(foregroundCornerRadius)
+    }
+    
+    var isRecording: BindingTarget<Bool> {
+        return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
     }
 }
 

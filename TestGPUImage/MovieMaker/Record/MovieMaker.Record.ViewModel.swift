@@ -46,9 +46,7 @@ extension MovieMaker.Record {
         
         let isRecording = MutableProperty<Bool>(false)
         
-        lazy var recordAction: Action<Void, Void, NoError> = {
-            return .single()//(enabledIf: !self.isRecording)
-        }()
+        lazy var recordAction: Action<Void, Void, NoError> = { return .single() }()
 
         init?() {
             guard self.camera != nil else { return nil }
@@ -80,7 +78,9 @@ extension MovieMaker.Record {
                     return
                 }
                 
-                do { try `self`.startRecording() }
+                do {
+                    try `self`.startRecording()
+                }
                 catch let error as NSError {
                     `self`.movieOutputUrl.input.send(error: error)
                 }
@@ -94,6 +94,8 @@ extension MovieMaker.Record {
 // Private
 private extension MovieMaker.Record.ViewModel {
     func startRecording() throws {
+        guard !self.isRecording.value else { fatalError() }
+        
         let directory = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         
         self.fileURL = URL(string: "test.mp4", relativeTo: directory)
@@ -103,11 +105,15 @@ private extension MovieMaker.Record.ViewModel {
         self.camera.audioEncodingTarget = self.movieOutput!
         self.previewOutput --> self.movieOutput!
         self.movieOutput!.startRecording()
-        
+
         self.isRecording.swap(true)
     }
     
     func stopRecording() {
+        guard self.isRecording.value else { fatalError() }
+        
+        self.isRecording.swap(false)
+        
         self.movieOutput!.finishRecording {
             self.camera.audioEncodingTarget = nil
             self.movieOutput = nil

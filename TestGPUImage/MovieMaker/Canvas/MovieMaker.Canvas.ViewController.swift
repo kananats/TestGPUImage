@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ReactiveSwift
 import UIKit
 
 extension MovieMaker.Canvas {
@@ -24,11 +25,22 @@ extension MovieMaker.Canvas {
     }
 }
 
+// Inheritance
 extension MovieMaker.Canvas.ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        self.createLayout()
+    }
+}
+
+// Private
+private extension MovieMaker.Canvas.ViewController {
+    func createLayout() {
+        guard self.button.superview == nil else { fatalError() }
         
         self.view.addSubview(self.button)
+        
         self.button.snp.makeConstraints { make in
             make.centerX.centerY.equalToSuperview()
         }
