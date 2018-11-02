@@ -15,15 +15,16 @@ import KPlugin
 
 extension MovieMaker.Record {
     final class ViewModel {
-        private lazy var camera: Camera! = {
-            guard let camera = try? Camera(sessionPreset: .high) else { return nil }
-            
-            if camera.captureSession.canSetSessionPreset(.hd1280x720) {
-                camera.captureSession.sessionPreset = .hd1280x720
-            }
-            
-            camera.startCapture()
-            return camera
+        private lazy var frontCamera: Camera! = {
+            return try? Camera(sessionPreset: .hd1280x720, location: .frontFacing)
+        }()
+        
+        private lazy var backCamera: Camera! = {
+            return try? Camera(sessionPreset: .hd1280x720, location: .backFacing)
+        }()
+        
+        private lazy var camera: MutableProperty<Camera> = {
+            return MutableProperty(self.frontCamera)
         }()
         
         private let noOperation = GammaAdjustment()
@@ -47,9 +48,11 @@ extension MovieMaker.Record {
         let isRecording = MutableProperty<Bool>(false)
         
         lazy var recordAction: Action<Void, Void, NoError> = { return .single() }()
+        lazy var closeAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
+        lazy var cameraSwitchAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
 
         init?() {
-            guard self.camera != nil else { return nil }
+            guard self.frontCamera != nil, self.backCamera != nil else { return nil }
             
             self.bind()
         }
@@ -62,14 +65,14 @@ extension MovieMaker.Record {
             disposable += self.filter.producer.optionalize().combinePrevious(nil).startWithValues { [weak self] previous, current in
                 guard let `self` = self else { return }
                 
-                `self`.camera.removeAllTargets()
+                `self`.camera.value.removeAllTargets()
                 previous?.removeAllTargets()
                 
-                `self`.camera.addTarget(current!)
+                `self`.camera.value.addTarget(current!)
                 current! --> `self`.previewOutput
             }
             
-            // Start/stop recording
+            // Start/ stop recording
             disposable += self.recordAction.values.observeValues { [weak self] _ in
                 guard let `self` = self else { return }
                 
@@ -84,6 +87,25 @@ extension MovieMaker.Record {
                 catch let error as NSError {
                     `self`.movieOutputUrl.input.send(error: error)
                 }
+            }
+            
+            // Switch camera
+            disposable += self.camera.producer.optionalize().combinePrevious(nil).startWithValues { [weak self] previous, current in
+                guard let `self` = self else { return }
+
+                sharedImageProcessingContext.runOperationSynchronously{
+                    previous?.stopCapture()
+                    previous?.removeAllTargets()
+                }
+                
+                current!.addTarget(`self`.filter.value)
+                current!.startCapture()
+            }
+            
+            disposable += self.cameraSwitchAction.values.observeValues { [weak self] _ in
+                guard let `self` = self else { return }
+
+                `self`.switchCamera()
             }
 
             return disposable
@@ -102,7 +124,7 @@ private extension MovieMaker.Record.ViewModel {
         try? FileManager.default.removeItem(at: self.fileURL)
         
         self.movieOutput = try MovieOutput(URL: self.fileURL, size: Size(width: 480, height: 640), liveVideo: true)
-        self.camera.audioEncodingTarget = self.movieOutput!
+        self.frontCamera.audioEncodingTarget = self.movieOutput!
         self.previewOutput --> self.movieOutput!
         self.movieOutput!.startRecording()
 
@@ -115,11 +137,18 @@ private extension MovieMaker.Record.ViewModel {
         self.isRecording.swap(false)
         
         self.movieOutput!.finishRecording {
-            self.camera.audioEncodingTarget = nil
+            self.frontCamera.audioEncodingTarget = nil
             self.movieOutput = nil
             self.movieOutputUrl.input.send(value: self.fileURL)
             
             self.isRecording.swap(false)
         }
+    }
+    
+    func switchCamera() {
+        var camera = self.frontCamera!
+        if camera == self.camera.value { camera = self.backCamera }
+        
+        self.camera.swap(camera)
     }
 }

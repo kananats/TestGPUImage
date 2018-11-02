@@ -51,7 +51,8 @@ extension MovieMaker.Record {
             // Orientation handler
             disposable += self.orientation <~ viewModel.orientation
             
-            self.closeButton.reactive.pressed = CocoaAction(viewModel.recordAction)
+            self.closeButton.reactive.pressed = CocoaAction(viewModel.closeAction)
+            self.cameraSwitchButton.reactive.pressed = CocoaAction(viewModel.cameraSwitchAction)
             
             return disposable
         }
@@ -86,6 +87,16 @@ private extension MovieMaker.Record.CameraControl {
         self.recordButton.snp.makeConstraints { make in
             make.width.height.equalTo(81)
         }
+        
+        self.closeButton.snp.makeConstraints { make in
+            make.width.height.equalTo(20)
+            make.left.equalToSuperview().offset(20) // TODO
+            make.top.equalToSuperview().offset(20) // TODO
+        }
+        
+        self.cameraSwitchButton.snp.makeConstraints { make in
+            make.width.height.equalTo(40)
+        }
     }
     
     func updatePortraitLayout() {
@@ -93,12 +104,22 @@ private extension MovieMaker.Record.CameraControl {
             make.bottom.equalToSuperview().offset(-40)
             make.centerX.equalToSuperview()
         }
+        
+        self.cameraSwitchButton.snp.remakeConstraints { make in
+            make.left.equalTo(self.snp.right).multipliedBy(74.0 / 375.0)
+            make.centerY.equalTo(self.recordButton)
+        }
     }
     
     func updateLandscapeLayout() {
         self.recordButton.snp.remakeConstraints { make in
             make.right.equalToSuperview().offset(-6)
             make.centerY.equalToSuperview()
+        }
+        
+        self.cameraSwitchButton.snp.remakeConstraints { make in
+            make.top.equalTo(self.snp.bottom).multipliedBy(261.0 / 375.0)
+            make.centerX.equalTo(self.recordButton)
         }
     }
 }

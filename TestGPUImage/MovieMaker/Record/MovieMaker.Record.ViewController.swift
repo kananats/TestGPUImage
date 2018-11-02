@@ -18,7 +18,6 @@ extension MovieMaker.Record {
         private lazy var viewModel: ViewModel! = {
             guard let viewModel = ViewModel() else { return nil }
             
-            self.bind(viewModel)
             return viewModel
         }()
         
@@ -37,7 +36,7 @@ extension MovieMaker.Record.ViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.makeLayout()
+        self.createLayout()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -49,13 +48,16 @@ extension MovieMaker.Record.ViewController {
                 self.dismiss(animated: true)
             })
             self.present(ac, animated: true)
+            
             return
         }
+        
+        self.bind(self.viewModel)
 
         self.viewModel.previewOutput --> self.renderView
     }
 
-    override var shouldAutorotate: Bool { return true }
+    override var shouldAutorotate: Bool { return !self.viewModel.isRecording.value }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { return .allButUpsideDown }
     
@@ -78,6 +80,11 @@ private extension MovieMaker.Record.ViewController {
         
         disposable += self.orientation <~ viewModel.orientation
         
+        // Exit
+        disposable += viewModel.closeAction.values.observeValues { [weak self] _ in
+            self?.dismiss(animated: true)
+        }
+        
         return disposable
     }
     
@@ -85,9 +92,13 @@ private extension MovieMaker.Record.ViewController {
         return self.reactive.makeBindingTarget { `self`, value in `self`.renderView.orientation = value }
     }
     
-    func makeLayout() {
-        if self.renderView.superview == nil { self.view.addSubview(self.renderView) }
-        if self.cameraControl.superview == nil { self.view.addSubview(self.cameraControl) }
+    func createLayout() {
+        guard self.renderView.superview == nil,
+            self.cameraControl.superview == nil
+            else { fatalError() }
+        
+        self.view.addSubview(self.renderView)
+        self.view.addSubview(self.cameraControl)
         
         self.renderView.snp.makeConstraints { make in make.edges.equalToSuperview() }
         self.cameraControl.snp.makeConstraints { make in make.edges.equalToSuperview() }
