@@ -77,8 +77,8 @@ private extension MovieMaker.Record.ViewController {
         
         disposable += self.orientation <~ viewModel.orientation
         
-        // Exit
-        disposable += viewModel.closeAction.values.observeValues { [weak self] _ in
+        // Dismiss ViewController
+        disposable += viewModel.dismissAction.values.observeValues { [weak self] _ in
             self?.dismiss(animated: true)
         }
         

@@ -30,7 +30,9 @@ extension MovieMaker.Record {
         private let noOperation = GammaAdjustment()
         private let smoothToonFilter = SmoothToonFilter()
         
+        /// Current applied filter
         private lazy var filter: MutableProperty<ImageProcessingOperation> = {
+            // Defines first filter here
             return MutableProperty(self.noOperation)
         }()
         
@@ -40,17 +42,74 @@ extension MovieMaker.Record {
         private var fileURL: URL!
         let movieOutputUrl = Signal<URL, NSError>.pipe()
         
+        /// Current camera orientation
         lazy var orientation: MutableProperty<ImageOrientation> = {
             let orientation = ImageOrientation.from(deviceOrientation: UIDevice.current.orientation) ?? .portrait
             return MutableProperty(orientation)
         }()
         
+        /// Is currently recording a video
         let isRecording = MutableProperty<Bool>(false)
         
-        lazy var recordAction: Action<Void, Void, NoError> = { return .single() }()
-        lazy var closeAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
-        lazy var cameraSwitchAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
-
+        /// Current recording session length
+        let recordingDuration = MutableProperty<Double>(0)
+        
+        /// Timer countdown duration
+        let timerDuration = 0
+        
+        /// Action to toggle recording on/ off. Timer is taken into account beforehand.
+        lazy var recordAction: Action<Void, Void, NSError> = { [weak self] in
+            return Action {
+                return SignalProducer { subscriber, lifetime in
+                    guard let `self` = self else { return }
+                    
+                    lifetime += `self`.timerAction.apply(`self`.timerDuration).startWithCompleted {
+                        defer { subscriber.sendCompleted() }
+                        
+                        if `self`.isRecording.value {
+                            `self`.stopRecording()
+                            return
+                        }
+                        
+                        do {
+                            try `self`.startRecording()
+                        }
+                        catch let error as NSError {
+                            `self`.movieOutputUrl.input.send(error: error)
+                        }
+                    }
+                }
+            }
+        }()
+        
+        /// Action to activate timer
+        private lazy var timerAction: Action<Int, Int, NoError> = { [weak self] in
+            return Action { input in
+                guard let `self` = self, input > 0 else { return .empty }
+                
+                return SignalProducer { subscriber, lifetime in
+                    subscriber.send(value: input)
+                    let startTime = Date()
+                    
+                    lifetime += SignalProducer.timer(interval: .seconds(1), on: QueueScheduler.main).map { value in input - Int(Date().timeIntervalSince(startTime)) }.startWithValues { value in
+                        subscriber.send(value: value)
+                        if value <= 0 { subscriber.sendCompleted() }
+                    }
+                }
+            }
+        }()
+        
+        lazy var dismissAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
+        lazy var cameraSwitchAction: Action<Void, Void, NoError> = {
+            return Action(enabledIf: !self.isRecording) {
+                var camera = self.frontCamera!
+                if camera == self.camera.value { camera = self.backCamera }
+                
+                self.camera.swap(camera)
+                return .empty
+            }
+        }()
+        
         init?() {
             guard self.frontCamera != nil, self.backCamera != nil else { return nil }
             
@@ -71,24 +130,7 @@ extension MovieMaker.Record {
                 `self`.camera.value.addTarget(current!)
                 current! --> `self`.previewOutput
             }
-            
-            // Start/ stop recording
-            disposable += self.recordAction.values.observeValues { [weak self] _ in
-                guard let `self` = self else { return }
-                
-                if `self`.isRecording.value {
-                    `self`.stopRecording()
-                    return
-                }
-                
-                do {
-                    try `self`.startRecording()
-                }
-                catch let error as NSError {
-                    `self`.movieOutputUrl.input.send(error: error)
-                }
-            }
-            
+  
             // Switch camera
             disposable += self.camera.producer.optionalize().combinePrevious(nil).startWithValues { [weak self] previous, current in
                 guard let `self` = self else { return }

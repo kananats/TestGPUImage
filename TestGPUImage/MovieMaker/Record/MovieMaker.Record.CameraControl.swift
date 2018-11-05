@@ -51,7 +51,7 @@ extension MovieMaker.Record {
             // Orientation handler
             disposable += self.orientation <~ viewModel.orientation
             
-            self.closeButton.reactive.pressed = CocoaAction(viewModel.closeAction)
+            self.closeButton.reactive.pressed = CocoaAction(viewModel.dismissAction)
             self.cameraSwitchButton.reactive.pressed = CocoaAction(viewModel.cameraSwitchAction)
             
             return disposable
