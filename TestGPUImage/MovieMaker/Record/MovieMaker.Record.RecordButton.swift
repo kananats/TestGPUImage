@@ -60,7 +60,7 @@ extension MovieMaker.Record.RecordButton {
         
         self.isRecording <~ viewModel.isRecording
         
-        self.reactive.pressed = CocoaAction(viewModel.recordAction)
+        self.reactive.pressed = CocoaAction(viewModel.toggleRecordAction)
         
         return disposable
     }

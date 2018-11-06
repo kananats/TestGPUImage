@@ -10,6 +10,67 @@ import Foundation
 import UIKit
 import GPUImage
 import ReactiveSwift
+import Result
+
+extension Double {
+    
+    /// Create an instance of `Double` from `DispatchTimeInterval`
+    init!(_ interval: DispatchTimeInterval) {
+        var result: Double!
+        
+        switch interval {
+        case .seconds(let value):       result = Double(value)
+        case .milliseconds(let value):  result = Double(value) * 0.001
+        case .microseconds(let value):  result = Double(value) * 0.000001
+        case .nanoseconds(let value):   result = Double(value) * 0.000000001
+        default: return nil
+        }
+        
+        self.init(result)
+    }
+}
+
+public extension SignalProducer {
+    
+    /// Zip each element with its corresponding index, which is a consecutive integer starting at zero
+    func zipWithIndex() -> SignalProducer<(Int, Value), Error> {
+        var index = 0
+        return self.map { value in
+            defer { index = index + 1 }
+            return (index, value)
+        }
+    }
+}
+
+public extension SignalProducer where Value == TimeInterval, Error == NoError {
+    
+    /// Create a repeating stopwatch of the given interval, sending updates on the give scheduler. This will never complete naturally.
+    static func stopwatch(initial: TimeInterval = 0, interval: DispatchTimeInterval = .seconds(1), on scheduler: DateScheduler = QueueScheduler.main) -> SignalProducer<Value, Error> {
+        
+        return SignalProducer { subscriber, lifetime in
+            subscriber.send(value: initial)
+            
+            lifetime += SignalProducer<Date, NoError>.timer(interval: interval, on: scheduler).zipWithIndex().map { value in
+                let (index, _) = value
+                return initial + TimeInterval(index + 1) * TimeInterval(interval)
+                }.startWithValues { value in subscriber.send(value: value) }
+        }
+    }
+ 
+    /// Create a repeating timer that counts either up or down by the given interval, sending updates on the give scheduler. This will complete automatically as the timer expires.
+    static func timer(from: TimeInterval, to: TimeInterval = 0, interval: DispatchTimeInterval = .seconds(1), on scheduler: DateScheduler = QueueScheduler.main) -> SignalProducer<TimeInterval, NoError> {
+
+        return SignalProducer { subscriber, lifetime in
+            
+            lifetime += SignalProducer.stopwatch(initial: from, interval: interval, on: scheduler).map {
+                value in from <= to ? value : 2 * from - value
+            }.startWithValues { value in
+                subscriber.send(value: value)
+                if from <= to ? value >= to : value <= to { subscriber.sendCompleted() }
+            }
+        }
+    }
+}
 
 public extension PropertyProtocol where Value == Bool {
     /// Create a property that computes a logical NOT in the latest value

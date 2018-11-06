@@ -15,10 +15,13 @@ import CoreMedia
 
 extension MovieMaker.Record {
     final class ViewController: UIViewController {
+        /// ViewModel for this ViewController
         private lazy var viewModel: ViewModel! = { return ViewModel() }()
         
+        /// Interactive control elements
         private lazy var cameraControl: CameraControl = { return CameraControl() }()
         
+        /// Live preview
         private lazy var renderView: RenderView = {
             let renderView = RenderView()
             renderView.fillMode = .stretch
@@ -54,7 +57,7 @@ extension MovieMaker.Record.ViewController {
         self.viewModel.previewOutput --> self.renderView
     }
 
-    override var shouldAutorotate: Bool { return !self.viewModel.isRecording.value }
+    override var shouldAutorotate: Bool { return !self.viewModel.isRecordingOrCountingDown.value }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { return .allButUpsideDown }
     
