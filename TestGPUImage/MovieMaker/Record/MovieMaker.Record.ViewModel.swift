@@ -15,14 +15,17 @@ import KPlugin
 
 extension MovieMaker.Record {
     final class ViewModel {
+        /// Front-facing camera
         private lazy var frontCamera: Camera! = {
             return try? Camera(sessionPreset: .hd1280x720, location: .frontFacing)
         }()
         
+        /// Rear camera
         private lazy var backCamera: Camera! = {
             return try? Camera(sessionPreset: .hd1280x720, location: .backFacing)
         }()
         
+        /// Current camera
         private lazy var camera: MutableProperty<Camera> = {
             return MutableProperty(self.frontCamera)
         }()
