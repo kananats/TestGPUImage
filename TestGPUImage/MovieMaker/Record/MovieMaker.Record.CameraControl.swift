@@ -13,7 +13,10 @@ import ReactiveCocoa
 import ReactiveSwift
 
 extension MovieMaker.Record {
+    
+    /// `UIView` which consists of interactive elements for controlling `MovieMaker.Record.ViewController`
     final class CameraControl: UIView {
+        
         /// `UIButton` for recording
         private lazy var recordButton: RecordButton = { return RecordButton() }()
 

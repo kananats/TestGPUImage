@@ -11,6 +11,8 @@ import ReactiveSwift
 import UIKit
 
 extension MovieMaker.Canvas {
+    
+    /// Main `UIViewController` to process movie and voice
     final class ViewController: UIViewController {
         private lazy var button: UIButton = {
             let button = UIButton()

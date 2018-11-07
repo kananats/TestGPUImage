@@ -12,6 +12,8 @@ import ReactiveCocoa
 import ReactiveSwift
 
 extension MovieMaker.Record {
+    
+    /// `UIButton` which represents recording button
     final class RecordButton: UIButton {
         
         var enableColor = UIColor(red: 247.0 / 255.0, green: 9.0 / 255.0, blue: 128.0 / 255.0, alpha: 0.9) {
