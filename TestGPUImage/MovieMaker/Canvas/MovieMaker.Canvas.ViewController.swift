@@ -13,7 +13,9 @@ import UIKit
 extension MovieMaker.Canvas {
     
     /// Main `UIViewController` to process movie and voice
-    final class ViewController: UIViewController {
+    public final class ViewController: UIViewController {
+        
+        // Temporary
         private lazy var button: UIButton = {
             let button = UIButton()
             button.setTitle("Record", for: .normal)
@@ -25,6 +27,7 @@ extension MovieMaker.Canvas {
             return button
         }()
         
+        // Temporary
         func test() {
             
         }
@@ -32,18 +35,21 @@ extension MovieMaker.Canvas {
 }
 
 // Inheritance
-extension MovieMaker.Canvas.ViewController {
+internal extension MovieMaker.Canvas.ViewController {
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         self.createLayout()
         
-        test()
+        self.test()
     }
 }
 
 // Private
 private extension MovieMaker.Canvas.ViewController {
+    
+    /// Layout initialization
     func createLayout() {
         guard self.button.superview == nil else { fatalError() }
         
@@ -52,5 +58,10 @@ private extension MovieMaker.Canvas.ViewController {
         self.button.snp.makeConstraints { make in
             make.centerX.centerY.equalToSuperview()
         }
+    }
+    
+    /// Update constraints
+    func updateLayout() {
+        
     }
 }

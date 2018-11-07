@@ -9,5 +9,7 @@
 import Foundation
 
 extension MovieMaker {
+    
+    /// Namespace `MovieMaker.Canvas`
     final class Canvas { private init() { } }
 }

@@ -16,30 +16,18 @@ extension MovieMaker.Record {
     /// `UIButton` which represents recording button
     final class RecordButton: UIButton {
         
-        var enableColor = UIColor(red: 247.0 / 255.0, green: 9.0 / 255.0, blue: 128.0 / 255.0, alpha: 0.9) {
-            didSet { self.isEnabled = super.isEnabled }
-        }
-        
-        var disableColor = UIColor(red: 247.0 / 255.0, green: 9.0 / 255.0, blue: 128.0 / 255.0, alpha: 0.9) {
-            didSet { self.isEnabled = super.isEnabled }
-        }
-        
-        var borderColor: UIColor = .clear {
-            didSet {
-                self.backgroundLayer.backgroundColor = self.borderColor.cgColor
-            }
-        }
-        
+        /// Foreground Layer
         private lazy var foregroundLayer: CALayer = {
-            let foregroundLayer = CALayer()
-            foregroundLayer.backgroundColor = self.enableColor.cgColor
-            return foregroundLayer
+            let layer = CALayer()
+            layer.backgroundColor = RecordButton.enableColor.cgColor
+            return layer
         }()
         
+        /// Background Layer
         private lazy var backgroundLayer: CALayer = {
-            let backgroundLayer = CALayer()
-            backgroundLayer.backgroundColor = UIColor.black.withAlphaComponent(0.6).cgColor
-            return backgroundLayer
+            let layer = CALayer()
+            layer.backgroundColor = RecordButton.backgroundColor.cgColor
+            return layer
         }()
         
         override init(frame: CGRect = .zero) {
@@ -56,6 +44,8 @@ extension MovieMaker.Record {
 
 // Public
 extension MovieMaker.Record.RecordButton {
+    
+    /// Bind with `MovieMaker.Record.ViewModel`
     @discardableResult
     func bind(_ viewModel: MovieMaker.Record.ViewModel) -> Disposable {
         let disposable = CompositeDisposable()
@@ -68,19 +58,21 @@ extension MovieMaker.Record.RecordButton {
     }
 }
 
-// Inheritance
-extension MovieMaker.Record.RecordButton {
-    override var isEnabled: Bool {
-        didSet {
-            super.isEnabled = self.isEnabled
-            
-            self.foregroundLayer.backgroundColor = self.isEnabled ? self.enableColor.cgColor : self.disableColor.cgColor;
-        }
-    }
-}
-
 // Private
 extension MovieMaker.Record.RecordButton {
+    
+    /// `UIColor` when `self` is enabled
+    static let enableColor = UIColor(red: 247.0 / 255.0, green: 9.0 / 255.0, blue: 128.0 / 255.0, alpha: 0.9)
+
+    /// `UIColor` for the background
+    static let backgroundColor = UIColor.black.withAlphaComponent(0.6)
+    
+    /// `BindingTarget<Bool>` for adaptive recording status
+    var isRecording: BindingTarget<Bool> {
+        return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
+    }
+    
+    /// Layout initialization
     func createLayout() {
         guard self.backgroundLayer.superlayer == nil,
             self.foregroundLayer.superlayer == nil
@@ -90,6 +82,7 @@ extension MovieMaker.Record.RecordButton {
         self.layer.addSublayer(self.foregroundLayer)
     }
     
+    /// Update constraints
     func updateLayout(_ isRecording: Bool) {
         var margin: Double = 8
         var backgroundMargin: Double = 0
@@ -111,10 +104,6 @@ extension MovieMaker.Record.RecordButton {
         
         self.foregroundLayer.frame = CGRect(x: margin, y: margin, width: width - margin * 2, height: height - margin * 2)
         self.foregroundLayer.cornerRadius = CGFloat(foregroundCornerRadius)
-    }
-    
-    var isRecording: BindingTarget<Bool> {
-        return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
     }
 }
 

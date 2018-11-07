@@ -34,6 +34,7 @@ extension MovieMaker.Record {
 
 // Inheritance
 extension MovieMaker.Record.ViewController {
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -63,6 +64,7 @@ extension MovieMaker.Record.ViewController {
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { return .allButUpsideDown }
     
     override func willRotate(to orientation: UIInterfaceOrientation, duration: TimeInterval) {
+        
         let orientation = ImageOrientation.from(interfaceOrientation: orientation) ?? .portrait
         
         guard orientation != self.viewModel.orientation.value else { return }
@@ -73,6 +75,8 @@ extension MovieMaker.Record.ViewController {
 
 // Private
 private extension MovieMaker.Record.ViewController {
+    
+    /// Bind with `MovieMaker.Record.ViewModel`
     @discardableResult
     func bind(_ viewModel: MovieMaker.Record.ViewModel) -> Disposable {
         let disposable = CompositeDisposable()
@@ -81,7 +85,7 @@ private extension MovieMaker.Record.ViewController {
         
         disposable += self.orientation <~ viewModel.orientation
         
-        // Dismiss ViewController
+        // Dismiss `self`
         disposable += viewModel.dismissAction.values.observeValues { [weak self] _ in
             self?.dismiss(animated: true)
         }
@@ -89,10 +93,12 @@ private extension MovieMaker.Record.ViewController {
         return disposable
     }
     
+    /// `BindingTarget<ImageOrientation>` for adaptive orientation
     var orientation: BindingTarget<ImageOrientation> {
         return self.reactive.makeBindingTarget { `self`, value in `self`.renderView.orientation = value }
     }
     
+    /// Layout initialization
     func createLayout() {
         guard self.renderView.superview == nil,
             self.cameraControl.superview == nil

@@ -9,5 +9,7 @@
 import Foundation
 
 extension MovieMaker {
+    
+    /// Namespace `MovieMaker.Record`
     final class Record { private init() { } }
 }

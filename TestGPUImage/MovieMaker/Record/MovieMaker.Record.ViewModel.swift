@@ -14,6 +14,7 @@ import GPUImage
 import KPlugin
 
 extension MovieMaker.Record {
+    
     /// `ViewModel` to be binded with `MovieMaker.Record.ViewController`
     final class ViewModel {
         
@@ -53,7 +54,8 @@ extension MovieMaker.Record {
         }()
         
         /// Current recording session duration
-        let recordDuration = MutableProperty<Double>(0)
+        let recordDuration = MutableProperty<TimeInterval>(0)
+        
         
         /// Is countdown timer enabled
         let isCountdownEnabled = MutableProperty<Bool>(false)
@@ -88,11 +90,13 @@ extension MovieMaker.Record {
                         if value <= 0 {
                             `self`.recordAction.apply().start()
                             
+                            subscriber.send(value: input)
                             subscriber.sendCompleted()
                         }
                     }
                     
                     lifetime += `self`.toggleRecordAction.completed.signal.observeValues {
+                        subscriber.send(value: input)
                         subscriber.sendInterrupted()
                     }
                 }
@@ -127,7 +131,7 @@ extension MovieMaker.Record {
                     }
                     catch let error as NSError { subscriber.send(error: error) }
                     
-                    lifetime += `self`.recordDuration <~ SignalProducer.stopwatch(interval: .milliseconds(100))
+                    lifetime += `self`.recordDuration <~ SignalProducer.stopwatch(interval: .milliseconds(16))
                     
                     lifetime += `self`.toggleRecordAction.completed.signal.observeValues {
                         let fileURL = `self`.stopRecording()
@@ -141,12 +145,28 @@ extension MovieMaker.Record {
  
         /// `Action` to switch between front/ rear `Camera`
         lazy var cameraSwitchAction: Action<Void, Void, NoError> = {
+            return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
+                guard let `self` = self else { return .empty }
+                
+                var camera = `self`.frontCamera!
+                if camera == `self`.camera.value { camera = `self`.backCamera }
+                
+                `self`.camera.swap(camera)
+                
+                return .empty
+            }
+        }()
+        
+        /// `Action` to toggle filter select view
+        lazy var filterSelectToggleAction: Action<Void, Void, NoError> = {
             return Action(enabledIf: !self.isRecordingOrCountingDown) {
-                var camera = self.frontCamera!
-                if camera == self.camera.value { camera = self.backCamera }
-                
-                self.camera.swap(camera)
-                
+                return .empty
+            }
+        }()
+        
+        /// `Action` to select filter
+        private lazy var filterSelectAction: Action<Void, Void, NoError> = {
+            return Action(enabledIf: !self.isRecordingOrCountingDown) {
                 return .empty
             }
         }()
@@ -164,26 +184,28 @@ extension MovieMaker.Record {
 
 // Public
 extension MovieMaker.Record.ViewModel {
+    
     /// Is currently recording
     var isRecording: Property<Bool> { return self.recordAction.isExecuting }
     
     /// Is timer currently counting down
     var isCountingDown: Property<Bool> { return self.countdownAction.isExecuting }
     
-    /// Is currently recording or counting down
+    /// Is currently either recording or counting down
     var isRecordingOrCountingDown: Property<Bool> { return self.isRecording || self.isCountingDown }
     
     /// Current countdown timer duration
     var countdownTimerDuration: Property<Int> {
         return Property(initial: MovieMaker.Record.ViewModel.maxTimerDuration, then: self.countdownAction.values)
     }
-    
-    /// Maximum timer countdown duration
-    static let maxTimerDuration: Int = 3
+    /// Maximum countdown timer duration
+    static let maxTimerDuration = 3
 }
 
 // Private
 private extension MovieMaker.Record.ViewModel {
+    
+    /// Bind
     @discardableResult
     func bind() -> Disposable {
         let disposable = CompositeDisposable()

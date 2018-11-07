@@ -8,6 +8,7 @@
 
 import Foundation
 
+/// Namespace `MovieMaker`
 final class MovieMaker { private init() { } }
 
 

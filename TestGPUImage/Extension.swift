@@ -12,17 +12,17 @@ import GPUImage
 import ReactiveSwift
 import Result
 
-extension Double {
+public extension TimeInterval {
     
-    /// Create an instance of `Double` from `DispatchTimeInterval`
+    /// Create an instance of `TimeInterval` from `DispatchTimeInterval`
     init!(_ interval: DispatchTimeInterval) {
-        var result: Double!
+        var result: TimeInterval!
         
         switch interval {
-        case .seconds(let value):       result = Double(value)
-        case .milliseconds(let value):  result = Double(value) * 0.001
-        case .microseconds(let value):  result = Double(value) * 0.000001
-        case .nanoseconds(let value):   result = Double(value) * 0.000000001
+        case .seconds(let value):       result = TimeInterval(value)
+        case .milliseconds(let value):  result = TimeInterval(value) * 0.001
+        case .microseconds(let value):  result = TimeInterval(value) * 0.000001
+        case .nanoseconds(let value):   result = TimeInterval(value) * 0.000000001
         default: return nil
         }
         
