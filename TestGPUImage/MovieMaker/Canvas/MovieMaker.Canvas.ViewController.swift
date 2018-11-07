@@ -22,6 +22,10 @@ extension MovieMaker.Canvas {
             
             return button
         }()
+        
+        func test() {
+            
+        }
     }
 }
 
@@ -31,6 +35,8 @@ extension MovieMaker.Canvas.ViewController {
         super.viewDidLoad()
 
         self.createLayout()
+        
+        test()
     }
 }
 

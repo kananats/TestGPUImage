@@ -31,14 +31,11 @@ extension Double {
 }
 
 public extension SignalProducer {
-    
+
     /// Zip each element with its corresponding index, which is a consecutive integer starting at zero
     func zipWithIndex() -> SignalProducer<(Int, Value), Error> {
-        var index = 0
-        return self.map { value in
-            defer { index = index + 1 }
-            return (index, value)
-        }
+        let indexProducer = self.scan(-1) { acc, _ in acc + 1 }
+        return indexProducer.zip(with: self)
     }
 }
 
@@ -61,12 +58,12 @@ public extension SignalProducer where Value == TimeInterval, Error == NoError {
     static func timer(from: TimeInterval, to: TimeInterval = 0, interval: DispatchTimeInterval = .seconds(1), on scheduler: DateScheduler = QueueScheduler.main) -> SignalProducer<TimeInterval, NoError> {
 
         return SignalProducer { subscriber, lifetime in
-            
+            let increasing = from <= to
             lifetime += SignalProducer.stopwatch(initial: from, interval: interval, on: scheduler).map {
-                value in from <= to ? value : 2 * from - value
+                value in increasing ? value : 2 * from - value
             }.startWithValues { value in
                 subscriber.send(value: value)
-                if from <= to ? value >= to : value <= to { subscriber.sendCompleted() }
+                if increasing ? value >= to : value <= to { subscriber.sendCompleted() }
             }
         }
     }

@@ -15,7 +15,7 @@ import CoreMedia
 
 extension MovieMaker.Record {
     final class ViewController: UIViewController {
-        /// ViewModel for this ViewController
+        /// `ViewModel` for this `UIViewController`
         private lazy var viewModel: ViewModel! = { return ViewModel() }()
         
         /// Interactive control elements

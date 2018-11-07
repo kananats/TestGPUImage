@@ -37,23 +37,22 @@ extension MovieMaker.Record {
         
         /// Current applied filter
         private lazy var filter: MutableProperty<ImageProcessingOperation> = {
-            // Declare first filter here
             return MutableProperty(self.noFilter)
         }()
         
-        /// Live preview output. Link this with `RenderView` to view it.
+        /// Preview this live output with `RenderView`
         let previewOutput = GammaAdjustment()
         
         private var movieOutput: MovieOutput!
         private var fileURL: URL!
         
-        /// Current camera orientation
+        /// Current `Camera` orientation
         lazy var orientation: MutableProperty<ImageOrientation> = {
             let orientation = ImageOrientation.from(deviceOrientation: UIDevice.current.orientation) ?? .portrait
             return MutableProperty(orientation)
         }()
         
-        /// Current recording session length
+        /// Current recording session duration
         let recordDuration = MutableProperty<Double>(0)
         
         /// Is countdown timer enabled
@@ -78,7 +77,7 @@ extension MovieMaker.Record {
             }
         }()
         
-        /// `Action` to begin countdown timer. Recording will take place right after timer expires.
+        /// `Action` to start countdown timer. Recording will take place right after timer expires.
         private lazy var countdownAction: Action<Int, Int, NoError> = {
             return Action { [weak self] input in
                 guard let `self` = self, input > 0 else { return .empty }
@@ -101,7 +100,7 @@ extension MovieMaker.Record {
         }()
         
         
-        /// `Action` to enable/ disable countdown timer
+        /// `Action` to activate/ deactivate countdown timer
         lazy var countdownToggleAction: Action<Void, Void, NoError> = {
             return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
                 guard let `self` = self else { return .empty }
@@ -139,20 +138,21 @@ extension MovieMaker.Record {
                 }
             }
         }()
-        
-        /// Action to dismiss `ViewController`
-        lazy var dismissAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
-        
-        /// Action to switch between front/ rear camera
+ 
+        /// `Action` to switch between front/ rear `Camera`
         lazy var cameraSwitchAction: Action<Void, Void, NoError> = {
             return Action(enabledIf: !self.isRecordingOrCountingDown) {
                 var camera = self.frontCamera!
                 if camera == self.camera.value { camera = self.backCamera }
                 
                 self.camera.swap(camera)
+                
                 return .empty
             }
         }()
+        
+        /// `Action` to dismiss `ViewController`
+        lazy var dismissAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
         
         init?() {
             guard self.frontCamera != nil, self.backCamera != nil else { return nil }
@@ -164,7 +164,7 @@ extension MovieMaker.Record {
 
 // Public
 extension MovieMaker.Record.ViewModel {
-    /// Is currently recording a video
+    /// Is currently recording
     var isRecording: Property<Bool> { return self.recordAction.isExecuting }
     
     /// Is timer currently counting down
@@ -212,9 +212,12 @@ private extension MovieMaker.Record.ViewModel {
             current!.startCapture()
         }
         
+        
+        
         return disposable
     }
     
+    /// Start recording implementation
     func startRecording(fileURL: URL) throws {
         self.fileURL = fileURL
         
@@ -227,6 +230,7 @@ private extension MovieMaker.Record.ViewModel {
         self.movieOutput!.startRecording()
     }
     
+    /// Stop recording implementation
     func stopRecording() -> URL {
         self.movieOutput!.finishRecording {
             self.camera.value.audioEncodingTarget = nil
