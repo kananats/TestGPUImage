@@ -49,6 +49,11 @@ extension MovieMaker.Record {
             return label
         }()
         
+        /// `MovieMaker.Filter.CollectionView` for selecting filter
+        private lazy var filterCollectionView: MovieMaker.Filter.CollectionView = {
+            return MovieMaker.Filter.CollectionView()
+        }()
+        
         /// `UIButton` for dismissing `UIViewController`
         private lazy var dismissButton: UIButton = {
             let button = UIButton()
@@ -106,6 +111,7 @@ private extension MovieMaker.Record.CameraControl {
             self.timeLabel.superview == nil,
             self.countdownToggleButton.superview == nil,
             self.countdownLabel.superview == nil,
+            self.filterCollectionView.superview == nil,
             self.dismissButton.superview == nil
             else { fatalError() }
         
@@ -114,16 +120,17 @@ private extension MovieMaker.Record.CameraControl {
         self.addSubview(self.timeLabel)
         self.addSubview(self.countdownToggleButton)
         self.addSubview(self.countdownLabel)
+        self.addSubview(self.filterCollectionView)
         self.addSubview(self.dismissButton)
 
         self.updateLayout(.portrait)
     }
     
-    /// Update constraints to fit new orientation
+    /// Update constraints to fit new `ImageOrientation`
     func updateLayout(_ orientation: ImageOrientation) {
         switch orientation {
-        case .landscapeLeft, .landscapeRight: `self`.updateLandscapeLayout()
-        default: `self`.updatePortraitLayout()
+        case .landscapeLeft, .landscapeRight: self.updateLandscapeLayout()
+        default: self.updatePortraitLayout()
         }
         
         self.timeLabel.snp.remakeConstraints { make in
@@ -164,6 +171,13 @@ private extension MovieMaker.Record.CameraControl {
             make.left.equalTo(self.snp.right).multipliedBy(261.0 / 375.0)
             make.centerY.equalTo(self.recordButton)
         }
+        
+        self.filterCollectionView.snp.remakeConstraints { make in
+            make.width.equalTo(self)
+            make.height.equalTo(MovieMaker.Filter.CollectionView.filterSize.height + 5)
+            make.centerX.equalTo(self)
+            make.bottom.equalTo(self.recordButton.snp.top).offset(-16)
+        }
     }
     
     /// Landscape constraits
@@ -184,6 +198,13 @@ private extension MovieMaker.Record.CameraControl {
             make.width.height.equalTo(40)
             make.top.equalTo(self.snp.bottom).multipliedBy(74.0 / 375.0)
             make.centerX.equalTo(self.recordButton)
+        }
+        
+        self.filterCollectionView.snp.remakeConstraints { make in
+            make.width.equalTo(MovieMaker.Filter.CollectionView.filterSize.width + 5)
+            make.height.equalTo(self)
+            make.right.equalTo(self.recordButton.snp.left).offset(-20)
+            make.centerY.equalTo(self)
         }
     }
 }

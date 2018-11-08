@@ -234,12 +234,10 @@ private extension MovieMaker.Record.ViewModel {
             current!.startCapture()
         }
         
-        
-        
         return disposable
     }
     
-    /// Start recording implementation
+    /// Implementation of start recording
     func startRecording(fileURL: URL) throws {
         self.fileURL = fileURL
         
@@ -252,7 +250,7 @@ private extension MovieMaker.Record.ViewModel {
         self.movieOutput!.startRecording()
     }
     
-    /// Stop recording implementation
+    /// Implementation of stop recording
     func stopRecording() -> URL {
         self.movieOutput!.finishRecording {
             self.camera.value.audioEncodingTarget = nil

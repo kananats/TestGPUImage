@@ -6,8 +6,6 @@
 //  Copyright © 2018 s.kananat. All rights reserved.
 //
 
-import Foundation
-
 extension MovieMaker {
     
     /// Namespace `MovieMaker.Record`
