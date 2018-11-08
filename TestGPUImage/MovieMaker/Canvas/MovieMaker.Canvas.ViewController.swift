@@ -51,8 +51,6 @@ private extension MovieMaker.Canvas.ViewController {
     
     /// Layout initialization
     func createLayout() {
-        guard self.button.superview == nil else { fatalError() }
-        
         self.view.addSubview(self.button)
         
         self.button.snp.makeConstraints { make in

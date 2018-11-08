@@ -58,9 +58,6 @@ private extension MovieMaker.Record.TimeLabel {
     
     /// Layout initialization
     func createLayout() {
-        guard self.imageView.superview == nil,
-            self.label.superview == nil else { fatalError() }
-        
         self.addSubview(self.imageView)
         self.addSubview(self.label)
         
@@ -82,8 +79,7 @@ private extension MovieMaker.Record.TimeLabel {
     }
 }
 
-
-
+// Extension
 extension NSAttributedString {
     
     /// Returns an `NSAttributedString` from the `TimeInterval` given

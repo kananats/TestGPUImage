@@ -6,20 +6,23 @@
 //  Copyright © 2018 s.kananat. All rights reserved.
 //
 
-import Foundation
 import UIKit
 import CoreGraphics
+import ReactiveSwift
 import GPUImage
 
 extension MovieMaker.Filter {
     
-    /// `UIView` for selecting filter
+    /// `UIView` for selecting `Filter`
     final class CollectionView: UIView {
         
-        /// `Delegate` for `MovieMaker.Filter.CollectionView`
+        /// `Delegate` for `Filter.CollectionView`
         public weak var delegate: Delegate?
+        
+        /// `Model` for this `UIViewController`
+        let model = Model()
 
-        /// `UICollectionView` for selecting filter
+        /// `UICollectionView` for selecting `Filter`
         private lazy var collectionView: UICollectionView = {
             let collectionView = UICollectionView(frame: self.frame, collectionViewLayout: self.layout)
             
@@ -31,18 +34,12 @@ extension MovieMaker.Filter {
             collectionView.backgroundColor = .clear
             collectionView.showsHorizontalScrollIndicator = false
             collectionView.showsVerticalScrollIndicator = false
-            
+
             return collectionView
         }()
         
         /// `UICollectionViewLayout` for `UICollectionView`
-        private lazy var layout: UICollectionViewLayout = {
-            let layout = UICollectionViewFlowLayout()
-            
-            layout.scrollDirection = .horizontal
-            
-            return layout
-        }()
+        private let layout = UICollectionViewFlowLayout()
         
         override init(frame: CGRect = .zero) {
             super.init(frame: frame)
@@ -50,6 +47,7 @@ extension MovieMaker.Filter {
             self.backgroundColor = .clear
             
             self.createLayout()
+            self.bind(self.model)
         }
         
         required init?(coder aDecoder: NSCoder) {
@@ -69,34 +67,25 @@ extension MovieMaker.Filter.CollectionView {
 extension MovieMaker.Filter.CollectionView: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        /*
-        let filter = CameraFilterCollectionView.filters[indexPath.row]
-        self.delegate?.filterDidSelect(filter)
-        */
-        let cell = collectionView.cellForItem(at: indexPath) as! Cell
+        guard self.model.indexPath.value != indexPath else { return }
         
-        cell.indicator.isHidden = false
-    }
-
-    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        let cell = collectionView.cellForItem(at: indexPath) as! Cell
-
-        cell.indicator.isHidden = true
+        self.model.indexPath.swap(indexPath)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
 
         var size = MovieMaker.Filter.CollectionView.filterSize
         
-        //if self.orientation.isPortrait { size.height += 5 }
-        //else { size.width += 5 }
-        
+        if self.model.orientation.value.isPortrait { size.height += 5 }
+        else { size.width += 5 }
+
         return size
     }
 }
 
 extension MovieMaker.Filter.CollectionView: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+
         return MovieMaker.Filter.all.count
     }
     
@@ -106,8 +95,9 @@ extension MovieMaker.Filter.CollectionView: UICollectionViewDataSource {
         
         let filter = MovieMaker.Filter.all[indexPath.row]
         cell.update(name: filter.name, image: nil)
+        
+        cell.reactive.isSelected <~ self.model.indexPath.map { $0 == indexPath }
 
-        //cell.indicator.isHidden = !cell.isSelected
         return cell
     }
 }
@@ -115,10 +105,29 @@ extension MovieMaker.Filter.CollectionView: UICollectionViewDataSource {
 // Private
 private extension MovieMaker.Filter.CollectionView {
     
+    /// `BindingTarget<ImageOrientation>` for adaptive orientation
+    var orientation: BindingTarget<ImageOrientation> {
+        return self.reactive.makeBindingTarget { `self`, value in
+            `self`.updateLayout(orientation: value)
+        }
+    }
+    
+    /// Bind with `Model`
+    @discardableResult
+    func bind(_ model: Model) -> Disposable {
+        let disposable = CompositeDisposable()
+        
+        disposable += self.orientation <~ model.orientation
+        /*
+         let filter = CameraFilterCollectionView.filters[indexPath.row]
+         self.delegate?.filterDidSelect(filter)
+         */
+
+        return disposable
+    }
+    
     /// Layout initialization
     func createLayout() {
-        guard self.collectionView.superview == nil else { fatalError() }
-        
         self.addSubview(self.collectionView)
         
         self.updateLayout()
@@ -129,5 +138,20 @@ private extension MovieMaker.Filter.CollectionView {
         self.collectionView.snp.remakeConstraints { make in
             make.edges.equalToSuperview()
         }
+    }
+    
+    /// Update constraints to fit new `ImageOrientation`
+    func updateLayout(orientation: ImageOrientation) {
+        
+        // Change item size
+        var itemSize = MovieMaker.Filter.CollectionView.filterSize
+        if orientation.isPortrait { itemSize.height += 5 }
+        else { itemSize.width += 5 }
+        self.layout.itemSize = itemSize
+        
+        // Change scroll direction
+        var scrollDirection: UICollectionView.ScrollDirection = .horizontal
+        if orientation.isPortrait { scrollDirection = .vertical  }
+        self.layout.scrollDirection = scrollDirection
     }
 }

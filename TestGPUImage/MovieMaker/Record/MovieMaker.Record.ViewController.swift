@@ -14,10 +14,11 @@ import SnapKit
 import CoreMedia
 
 extension MovieMaker.Record {
+    /// `UIViewController` for recording
     final class ViewController: UIViewController {
         
-        /// `ViewModel` for this `UIViewController`
-        private lazy var viewModel: ViewModel! = { return ViewModel() }()
+        /// `Model` for this `UIViewController`
+        private lazy var model: Model! = { return Model() }()
         
         /// Interactive control elements
         private lazy var cameraControl: CameraControl = { return CameraControl() }()
@@ -44,7 +45,7 @@ extension MovieMaker.Record.ViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        guard self.viewModel != nil else {
+        guard self.model != nil else {
             let ac = UIAlertController(title: "Error", message: "Unable to initialize camera", preferredStyle: .alert)
             ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in
                 self.dismiss(animated: true)
@@ -54,12 +55,12 @@ extension MovieMaker.Record.ViewController {
             return
         }
         
-        self.bind(self.viewModel)
+        self.bind(self.model)
 
-        self.viewModel.previewOutput --> self.renderView
+        self.model.previewOutput --> self.renderView
     }
 
-    override var shouldAutorotate: Bool { return !self.viewModel.isRecordingOrCountingDown.value }
+    override var shouldAutorotate: Bool { return !self.model.isRecordingOrCountingDown.value }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { return .allButUpsideDown }
     
@@ -67,26 +68,26 @@ extension MovieMaker.Record.ViewController {
         
         let orientation = ImageOrientation.from(interfaceOrientation: orientation) ?? .portrait
         
-        guard orientation != self.viewModel.orientation.value else { return }
+        guard orientation != self.model.orientation.value else { return }
         
-        self.viewModel.orientation.swap(orientation)
+        self.model.orientation.swap(orientation)
     }
 }
 
 // Private
 private extension MovieMaker.Record.ViewController {
     
-    /// Bind with `MovieMaker.Record.ViewModel`
+    /// Bind with `Model`
     @discardableResult
-    func bind(_ viewModel: MovieMaker.Record.ViewModel) -> Disposable {
+    func bind(_ model: Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += self.cameraControl.bind(viewModel)
+        disposable += self.cameraControl.bind(model)
         
-        disposable += self.orientation <~ viewModel.orientation
+        disposable += self.orientation <~ model.orientation
         
-        // Dismiss `self`
-        disposable += viewModel.dismissAction.values.observeValues { [weak self] _ in
+        // Dismiss `UIViewController`
+        disposable += model.dismissAction.values.observeValues { [weak self] _ in
             self?.dismiss(animated: true)
         }
         
@@ -100,14 +101,15 @@ private extension MovieMaker.Record.ViewController {
     
     /// Layout initialization
     func createLayout() {
-        guard self.renderView.superview == nil,
-            self.cameraControl.superview == nil
-            else { fatalError() }
-        
         self.view.addSubview(self.renderView)
         self.view.addSubview(self.cameraControl)
         
-        self.renderView.snp.makeConstraints { make in make.edges.equalToSuperview() }
-        self.cameraControl.snp.makeConstraints { make in make.edges.equalToSuperview() }
+        self.updateLayout()
+    }
+    
+    /// Update constraints
+    func updateLayout() {
+        self.renderView.snp.remakeConstraints { make in make.edges.equalToSuperview() }
+        self.cameraControl.snp.remakeConstraints { make in make.edges.equalToSuperview() }
     }
 }

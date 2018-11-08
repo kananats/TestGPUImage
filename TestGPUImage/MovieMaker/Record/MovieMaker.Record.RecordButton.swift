@@ -45,14 +45,14 @@ extension MovieMaker.Record {
 // Public
 extension MovieMaker.Record.RecordButton {
     
-    /// Bind with `MovieMaker.Record.ViewModel`
+    /// Bind with `Record.ViewController.Model`
     @discardableResult
-    func bind(_ viewModel: MovieMaker.Record.ViewModel) -> Disposable {
+    func bind(_ model: MovieMaker.Record.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        self.isRecording <~ viewModel.isRecording
+        self.isRecording <~ model.isRecording
         
-        self.reactive.pressed = CocoaAction(viewModel.toggleRecordAction)
+        self.reactive.pressed = CocoaAction(model.toggleRecordAction)
         
         return disposable
     }
@@ -74,10 +74,6 @@ extension MovieMaker.Record.RecordButton {
     
     /// Layout initialization
     func createLayout() {
-        guard self.backgroundLayer.superlayer == nil,
-            self.foregroundLayer.superlayer == nil
-            else { fatalError() }
-        
         self.layer.addSublayer(self.backgroundLayer)
         self.layer.addSublayer(self.foregroundLayer)
     }

@@ -49,7 +49,16 @@ extension MovieMaker.Record {
             return label
         }()
         
-        /// `MovieMaker.Filter.CollectionView` for selecting filter
+        /// `UIButton` for showing/ hiding `Filter.CollectionView`
+        private lazy var filterCollectionViewToggleButton: UIButton = {
+            let button = UIButton()
+            button.setImage(UIImage(named: "icoFilter"), for: .normal)
+            button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+            button.layer.cornerRadius = 20
+            return button
+        }()
+        
+        /// `Filter.CollectionView` for selecting `Filter`
         private lazy var filterCollectionView: MovieMaker.Filter.CollectionView = {
             return MovieMaker.Filter.CollectionView()
         }()
@@ -76,21 +85,23 @@ extension MovieMaker.Record {
 // Public
 extension MovieMaker.Record.CameraControl {
     
-    /// Bind with `MovieMaker.Record.ViewModel`
+    /// Bind with `Record.ViewController.Model`
     @discardableResult
-    func bind(_ viewModel: MovieMaker.Record.ViewModel) -> Disposable {
+    func bind(_ model: MovieMaker.Record.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += self.orientation <~ viewModel.orientation
-        disposable += self.recordButton.bind(viewModel)
-        disposable += self.timeLabel.time <~ viewModel.recordDuration
-        disposable += self.countdownToggleButton.reactive.image(for: .normal) <~ viewModel.isCountdownEnabled.map { $0 ? UIImage(named: "icoTimerOff")! : UIImage(named: "icoTimer")! }
-        disposable += self.countdownLabel.reactive.isHidden <~ (!viewModel.isCountdownEnabled || viewModel.isRecording)
-        disposable += self.countdownLabel.reactive.text <~ viewModel.countdownTimerDuration.map { String($0) }
+        disposable += self.orientation <~ model.orientation
+        disposable += self.recordButton.bind(model)
+        disposable += self.timeLabel.time <~ model.recordDuration
+        disposable += self.countdownToggleButton.reactive.image(for: .normal) <~ model.isCountdownEnabled.map { $0 ? UIImage(named: "icoTimerOff")! : UIImage(named: "icoTimer")! }
+        disposable += self.countdownLabel.reactive.isHidden <~ (!model.isCountdownEnabled || model.isRecording)
+        disposable += self.countdownLabel.reactive.text <~ model.countdownTimerDuration.map { String($0) }
+        disposable += self.filterCollectionView.reactive.isHidden <~ !model.isSelectingFilter
         
-        self.dismissButton.reactive.pressed = CocoaAction(viewModel.dismissAction)
-        self.cameraSwitchButton.reactive.pressed = CocoaAction(viewModel.cameraSwitchAction)
-        self.countdownToggleButton.reactive.pressed = CocoaAction(viewModel.countdownToggleAction)
+        self.cameraSwitchButton.reactive.pressed = CocoaAction(model.cameraSwitchAction)
+        self.countdownToggleButton.reactive.pressed = CocoaAction(model.countdownToggleAction)
+        self.filterCollectionViewToggleButton.reactive.pressed = CocoaAction(model.filterSelectToggleAction)
+        self.dismissButton.reactive.pressed = CocoaAction(model.dismissAction)
         
         return disposable
     }
@@ -101,37 +112,27 @@ private extension MovieMaker.Record.CameraControl {
     
     /// `BindingTarget<ImageOrientation>` for adaptive orientation
     var orientation: BindingTarget<ImageOrientation> {
-        return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
+        return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(orientation: value) }
     }
     
     /// Layout initialization
     func createLayout() {
-        guard self.recordButton.superview == nil,
-            self.cameraSwitchButton.superview == nil,
-            self.timeLabel.superview == nil,
-            self.countdownToggleButton.superview == nil,
-            self.countdownLabel.superview == nil,
-            self.filterCollectionView.superview == nil,
-            self.dismissButton.superview == nil
-            else { fatalError() }
-        
         self.addSubview(self.recordButton)
         self.addSubview(self.cameraSwitchButton)
         self.addSubview(self.timeLabel)
         self.addSubview(self.countdownToggleButton)
         self.addSubview(self.countdownLabel)
+        self.addSubview(self.filterCollectionViewToggleButton)
         self.addSubview(self.filterCollectionView)
         self.addSubview(self.dismissButton)
 
-        self.updateLayout(.portrait)
+        self.updateLayout()
     }
     
     /// Update constraints to fit new `ImageOrientation`
-    func updateLayout(_ orientation: ImageOrientation) {
-        switch orientation {
-        case .landscapeLeft, .landscapeRight: self.updateLandscapeLayout()
-        default: self.updatePortraitLayout()
-        }
+    func updateLayout(orientation: ImageOrientation = .portrait) {
+        if orientation.isPortrait { self.updatePortraitLayout() }
+        else { self.updateLandscapeLayout() }
         
         self.timeLabel.snp.remakeConstraints { make in
             make.width.equalTo(136)
@@ -172,6 +173,12 @@ private extension MovieMaker.Record.CameraControl {
             make.centerY.equalTo(self.recordButton)
         }
         
+        self.filterCollectionViewToggleButton.snp.remakeConstraints { make in
+            make.width.height.equalTo(40)
+            make.left.equalTo(self.snp.right).multipliedBy(317.0 / 375.0)
+            make.centerY.equalTo(self.recordButton)
+        }
+        
         self.filterCollectionView.snp.remakeConstraints { make in
             make.width.equalTo(self)
             make.height.equalTo(MovieMaker.Filter.CollectionView.filterSize.height + 5)
@@ -198,6 +205,12 @@ private extension MovieMaker.Record.CameraControl {
             make.width.height.equalTo(40)
             make.top.equalTo(self.snp.bottom).multipliedBy(74.0 / 375.0)
             make.centerX.equalTo(self.recordButton)
+        }
+        
+        self.filterCollectionViewToggleButton.snp.remakeConstraints { make in
+            make.width.height.equalTo(40)
+            make.centerX.equalTo(self.recordButton)
+            make.top.equalTo(self.snp.bottom).multipliedBy(18.0 / 375.0)
         }
         
         self.filterCollectionView.snp.remakeConstraints { make in

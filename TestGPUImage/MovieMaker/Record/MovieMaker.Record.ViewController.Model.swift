@@ -1,5 +1,5 @@
 //
-//  ViewModel.swift
+//  MovieMaker.Record.ViewController.Model.swift
 //  TestGPUImage
 //
 //  Created by s.kananat on 2018/10/31.
@@ -13,10 +13,10 @@ import ReactiveSwift
 import GPUImage
 import KPlugin
 
-extension MovieMaker.Record {
+extension MovieMaker.Record.ViewController {
     
-    /// `ViewModel` to be binded with `MovieMaker.Record.ViewController`
-    final class ViewModel {
+    /// `Model` to be binded with `Record.ViewController`
+    final class Model {
         
         /// Current `Camera`
         private lazy var camera: MutableProperty<Camera> = {
@@ -36,7 +36,7 @@ extension MovieMaker.Record {
         private let noFilter = GammaAdjustment()
         private let smoothToonFilter = SmoothToonFilter()
         
-        /// Current applied filter
+        /// Current applied `Filter`
         private lazy var filter: MutableProperty<ImageProcessingOperation> = {
             return MutableProperty(self.noFilter)
         }()
@@ -44,7 +44,10 @@ extension MovieMaker.Record {
         /// Preview this live output with `RenderView`
         let previewOutput = GammaAdjustment()
         
+        /// `MovieOutput` from the recording session
         private var movieOutput: MovieOutput!
+        
+        /// `URL` of the exported movie file
         private var fileURL: URL!
         
         /// Current `Camera` orientation
@@ -55,7 +58,6 @@ extension MovieMaker.Record {
         
         /// Current recording session duration
         let recordDuration = MutableProperty<TimeInterval>(0)
-        
         
         /// Is countdown timer enabled
         let isCountdownEnabled = MutableProperty<Bool>(false)
@@ -72,7 +74,7 @@ extension MovieMaker.Record {
                     
                     guard shouldStart else { return }
 
-                    let timerDuration = ViewModel.maxTimerDuration
+                    let timerDuration = MovieMaker.Record.ViewController.Model.maxTimerDuration
                     if timerDuration > 0, `self`.isCountdownEnabled.value { `self`.countdownAction.apply(timerDuration).start() }
                     else { `self`.recordAction.apply().start() }
                 }
@@ -157,17 +159,34 @@ extension MovieMaker.Record {
             }
         }()
         
-        /// `Action` to toggle filter select view
+        /// `Action` to toggle `Filter` select view
         lazy var filterSelectToggleAction: Action<Void, Void, NoError> = {
-            return Action(enabledIf: !self.isRecordingOrCountingDown) {
-                return .empty
+            return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
+                guard let `self` = self else { return .empty }
+                
+                let shouldStart = !`self`.isSelectingFilter.value
+
+                return SignalProducer { subscriber, _ in
+                    subscriber.sendCompleted()
+                    
+                     guard shouldStart else { return }
+                    
+                    `self`.filterSelectAction.apply().start()
+                }
             }
         }()
         
-        /// `Action` to select filter
+        /// `Action` to select `Filter`
         private lazy var filterSelectAction: Action<Void, Void, NoError> = {
-            return Action(enabledIf: !self.isRecordingOrCountingDown) {
-                return .empty
+            return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
+                guard let `self` = self else { return .empty }
+                
+                return SignalProducer { subscriber, lifetime in
+                    
+                    lifetime += `self`.filterSelectToggleAction.completed.signal.observeValues {
+                        subscriber.sendCompleted()
+                    }
+                }
             }
         }()
         
@@ -183,7 +202,7 @@ extension MovieMaker.Record {
 }
 
 // Public
-extension MovieMaker.Record.ViewModel {
+extension MovieMaker.Record.ViewController.Model {
     
     /// Is currently recording
     var isRecording: Property<Bool> { return self.recordAction.isExecuting }
@@ -194,17 +213,21 @@ extension MovieMaker.Record.ViewModel {
     /// Is currently either recording or counting down
     var isRecordingOrCountingDown: Property<Bool> { return self.isRecording || self.isCountingDown }
     
+    /// Is currently selecting `Filter`
+    var isSelectingFilter: Property<Bool> { return self.filterSelectAction.isExecuting }
+    
     /// Current countdown timer duration
     var countdownTimerDuration: Property<Int> {
-        return Property(initial: MovieMaker.Record.ViewModel.maxTimerDuration, then: self.countdownAction.values)
+        return Property(initial: MovieMaker.Record.ViewController.Model.maxTimerDuration, then: self.countdownAction.values)
     }
+    
     /// Maximum countdown timer duration
     static let maxTimerDuration = 3
 }
 
 // Private
-private extension MovieMaker.Record.ViewModel {
-    
+private extension MovieMaker.Record.ViewController.Model {
+
     /// Bind
     @discardableResult
     func bind() -> Disposable {

@@ -112,4 +112,7 @@ extension ImageOrientation {
         default: return nil
         }
     }
+    
+    var isPortrait: Bool { return self == .portrait || self == .portraitUpsideDown }
+    var isLandscape: Bool { return !self.isPortrait }
 }

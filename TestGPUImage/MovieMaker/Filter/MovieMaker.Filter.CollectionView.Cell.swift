@@ -14,13 +14,12 @@ import GPUImage
 
 extension MovieMaker.Filter.CollectionView {
     
-    /// Cell used in `MovieMaker.Filter.CollectionView`
+    /// `Cell` used in `Filter.CollectionView`
     final class Cell: UICollectionViewCell {
 
         /// `UIView` indicating whether `self` is being selected
-        lazy var indicator: UIView = {
+        fileprivate lazy var indicator: UIView = {
             let indicator = UIView()
-            //indicator.isHidden = true
             indicator.backgroundColor = .purple
             return indicator
         }()
@@ -61,7 +60,7 @@ extension MovieMaker.Filter.CollectionView.Cell {
         return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
     }
     
-    /// Update filter information
+    /// Update cell information using `Filter`
     func update(name: String, image: UIImage?) {
         self.label.text = name
         self.imageView.image = image
@@ -78,12 +77,6 @@ private extension MovieMaker.Filter.CollectionView.Cell {
     
     /// Layout initialization
     func createLayout() {
-        guard self.indicator.superview == nil,
-            self.imageView.superview == nil,
-            self.label.superview == nil
-        
-            else { fatalError() }
-        
         self.contentView.addSubview(self.indicator)
         self.contentView.addSubview(self.imageView)
         self.contentView.addSubview(self.label)
@@ -93,10 +86,8 @@ private extension MovieMaker.Filter.CollectionView.Cell {
     
     /// Update constraints to fit new orientation
     func updateLayout(_ orientation: ImageOrientation) {
-        switch orientation {
-        case .landscapeLeft, .landscapeRight: self.updateLandscapeLayout()
-        default: self.updatePortraitLayout()
-        }
+        if orientation.isPortrait { self.updatePortraitLayout() }
+        else { self.updateLandscapeLayout() }
         
         self.label.snp.remakeConstraints { make in
             make.left.equalTo(self.imageView).offset(2)
@@ -133,6 +124,17 @@ private extension MovieMaker.Filter.CollectionView.Cell {
             make.size.equalTo(MovieMaker.Filter.CollectionView.filterSize)
             make.top.equalTo(self.snp.bottom).offset(2)
             make.centerX.equalTo(self.contentView)
+        }
+    }
+}
+
+// Extension
+extension Reactive where Base: MovieMaker.Filter.CollectionView.Cell {
+    
+    /// `BindingTarget<Bool>` indicating whether `self` is selected
+    var isSelected: BindingTarget<Bool> {
+        return self.makeBindingTarget { `self`, value in
+            `self`.indicator.isHidden = !value
         }
     }
 }
