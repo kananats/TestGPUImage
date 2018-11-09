@@ -169,6 +169,10 @@ extension MovieMaker.Record.ViewController {
             
             self.bind()
         }
+        
+        deinit {
+            self.camera.value.removeAllTargets()
+        }
     }
 }
 
