@@ -16,16 +16,6 @@ extension MovieMaker.Filter {
     /// `UIView` for selecting `Filter`
     final class CollectionView: UIView {
         
-        // todo fix this bad
-        /// `Delegate` for `Filter.CollectionView`
-        public weak var delegate: Delegate? {
-            didSet {
-                guard let delegate = self.delegate else { return }
-                
-                delegate.filterBindingTarget <~ self.model.filter
-            }
-        }
-        
         /// `Model` for this `UIViewController`
         let model = Model()
 

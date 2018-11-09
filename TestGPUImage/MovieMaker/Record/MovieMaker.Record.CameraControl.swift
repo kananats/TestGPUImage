@@ -90,8 +90,7 @@ extension MovieMaker.Record.CameraControl {
     func bind(_ model: MovieMaker.Record.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        print("set model")
-        self.filterCollectionView.delegate = model
+        model.filterBindingTarget <~ self.filterCollectionView.model.filter
         
         disposable += self.orientation <~ model.orientation
         disposable += self.recordButton.bind(model)
