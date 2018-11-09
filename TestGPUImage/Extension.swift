@@ -12,6 +12,18 @@ import GPUImage
 import ReactiveSwift
 import Result
 
+extension ImageOrientation: CustomStringConvertible {
+    
+    public var description: String {
+        switch self {
+        case .portrait:             return "portrait"
+        case .portraitUpsideDown:   return "portraitUpsideDown"
+        case .landscapeLeft:        return "landscapeLeft"
+        case .landscapeRight:       return "landscapeRight"
+        }
+    }
+}
+
 public extension Action {
     
     /// Creates an instance of `Action` that would be conditionally enabled, wrapping the original `Action` and will terminate it only if it is being executed. `Bool` value indicating toggle on/ off will be sent as `Output`.

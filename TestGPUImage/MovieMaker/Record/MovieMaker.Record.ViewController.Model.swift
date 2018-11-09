@@ -20,14 +20,8 @@ extension MovieMaker.Record.ViewController {
         
         /// Current `Camera`
         private lazy var camera: MutableProperty<Camera> = {
-            return MutableProperty(self.frontCamera)
+            return MutableProperty(MovieMaker.Record.ViewController.Model.frontCamera)
         }()
-        
-        /// Front `Camera`
-        private lazy var frontCamera: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .frontFacing) }()
-        
-        /// Rear `Camera`
-        private lazy var backCamera: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .backFacing) }()
         
         /// Preview this live output with `RenderView`
         let previewOutput = GammaAdjustment()
@@ -138,8 +132,8 @@ extension MovieMaker.Record.ViewController {
             return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
                 guard let `self` = self else { return .empty }
                 
-                var camera = `self`.frontCamera!
-                if camera == `self`.camera.value { camera = `self`.backCamera }
+                var camera = MovieMaker.Record.ViewController.Model.frontCamera!
+                if camera == `self`.camera.value { camera = MovieMaker.Record.ViewController.Model.backCamera }
                 
                 `self`.camera.swap(camera)
                 
@@ -165,7 +159,9 @@ extension MovieMaker.Record.ViewController {
         lazy var dismissAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
         
         init?() {
-            guard self.frontCamera != nil, self.backCamera != nil else { return nil }
+            guard MovieMaker.Record.ViewController.Model.frontCamera != nil,
+                MovieMaker.Record.ViewController.Model.backCamera != nil
+                else { return nil }
             
             self.bind()
         }
@@ -208,6 +204,12 @@ extension MovieMaker.Record.ViewController.Model: MovieMaker.Filter.CollectionVi
 // Private
 private extension MovieMaker.Record.ViewController.Model {
 
+    /// Front `Camera`
+    private static let frontCamera: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .frontFacing) }()
+    
+    /// Rear `Camera`
+    private static let backCamera: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .backFacing) }()
+    
     /// Bind
     @discardableResult
     func bind() -> Disposable {
@@ -267,7 +269,7 @@ private extension MovieMaker.Record.ViewController.Model {
         try? FileManager.default.removeItem(at: self.fileURL)
         
         self.movieOutput = try MovieOutput(URL: self.fileURL, size: Size(width: 480, height: 640), liveVideo: true)
-        self.frontCamera.audioEncodingTarget = self.movieOutput!
+        self.camera.value.audioEncodingTarget = self.movieOutput!
         self.previewOutput --> self.movieOutput!
         
         self.movieOutput!.startRecording()
