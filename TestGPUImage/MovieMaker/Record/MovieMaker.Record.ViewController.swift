@@ -94,7 +94,7 @@ private extension MovieMaker.Record.ViewController {
         return disposable
     }
     
-    /// `BindingTarget<ImageOrientation>` for adaptive orientation
+    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
     var orientation: BindingTarget<ImageOrientation> {
         return self.reactive.makeBindingTarget { `self`, value in `self`.renderView.orientation = value }
     }

@@ -90,6 +90,9 @@ extension MovieMaker.Record.CameraControl {
     func bind(_ model: MovieMaker.Record.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
+        print("set model")
+        self.filterCollectionView.delegate = model
+        
         disposable += self.orientation <~ model.orientation
         disposable += self.recordButton.bind(model)
         disposable += self.timeLabel.time <~ model.recordDuration
@@ -110,7 +113,7 @@ extension MovieMaker.Record.CameraControl {
 // Private
 private extension MovieMaker.Record.CameraControl {
     
-    /// `BindingTarget<ImageOrientation>` for adaptive orientation
+    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
     var orientation: BindingTarget<ImageOrientation> {
         return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(orientation: value) }
     }

@@ -12,6 +12,53 @@ import GPUImage
 import ReactiveSwift
 import Result
 
+public extension Action {
+    /// Creates an instance of `Action` that would be conditionally enabled, wrapping the original `Action` and will terminate it only if it is being executed.
+    func makeToggleAction<P: PropertyProtocol>(input: Input, enabledIf isEnabled: P) -> Action<Void, Bool, NoError> where P.Value == Bool {
+        var disposable: Disposable?
+        
+        let action = Action<Void, Bool, NoError>(enabledIf: isEnabled) {
+            let isExecuting = self.isExecuting.value
+            
+            return SignalProducer { subscriber, _ in
+                subscriber.send(value: !isExecuting)
+                
+                if isExecuting {
+                    subscriber.sendInterrupted()
+                    return
+                }
+
+                subscriber.sendCompleted()
+                disposable = self.apply(input).start()
+            }
+        }
+        
+        self.lifetime += action.events.filter { $0 == .interrupted } .observeValues { _ in
+            disposable?.dispose()
+        }
+
+        return action
+    }
+    
+    /// Creates an instance of `Action` that wraps the original `Action` and will terminate it only if it is being executed.
+    func makeToggleAction(input: Input) -> Action<Void, Bool, NoError> {
+        return self.makeToggleAction(input: input, enabledIf: Property(value: true))
+    }
+}
+
+public extension Action where Input == Void {
+    
+    /// Creates an instance of `Action` that would be conditionally enabled, wrapping the original `Action` and will terminate it only if it is being executed.
+    func makeToggleAction<P: PropertyProtocol>(enabledIf isEnabled: P) -> Action<Void, Bool, NoError> where P.Value == Bool {
+        return self.makeToggleAction(input: (), enabledIf: isEnabled)
+    }
+    
+    /// Creates an instance of `Action` that wraps the original `Action` and will terminate it only if it is being executed.
+    func makeToggleAction() -> Action<Void, Bool, NoError> {
+        return self.makeToggleAction(enabledIf: Property(value: true))
+    }
+}
+
 public extension TimeInterval {
     
     /// Create an instance of `TimeInterval` from `DispatchTimeInterval`
@@ -32,7 +79,7 @@ public extension TimeInterval {
 
 public extension SignalProducer {
 
-    /// Zip each element with its corresponding index, which is a consecutive integer starting at zero
+    /// Zip each element with its corresponding index, which is a consecutive `Int` starting at zero
     func zipWithIndex() -> SignalProducer<(Int, Value), Error> {
         let indexProducer = self.scan(-1) { acc, _ in acc + 1 }
         return indexProducer.zip(with: self)
@@ -41,7 +88,7 @@ public extension SignalProducer {
 
 public extension SignalProducer where Value == TimeInterval, Error == NoError {
     
-    /// Create a repeating stopwatch of the given interval, sending updates on the give scheduler. This will never complete naturally.
+    /// Create a repeating stopwatch of the given interval, sending updates on the given `DateScheduler`. This will never complete naturally.
     static func stopwatch(initial: TimeInterval = 0, interval: DispatchTimeInterval = .seconds(1), on scheduler: DateScheduler = QueueScheduler.main) -> SignalProducer<Value, Error> {
         
         return SignalProducer { subscriber, lifetime in
@@ -54,7 +101,7 @@ public extension SignalProducer where Value == TimeInterval, Error == NoError {
         }
     }
  
-    /// Create a repeating timer that counts either up or down by the given interval, sending updates on the give scheduler. This will complete automatically as the timer expires.
+    /// Create a repeating timer that counts either up or down by the given interval, sending updates on the given `DateScheduler`. This will complete automatically as the timer expires.
     static func timer(from: TimeInterval, to: TimeInterval = 0, interval: DispatchTimeInterval = .seconds(1), on scheduler: DateScheduler = QueueScheduler.main) -> SignalProducer<TimeInterval, NoError> {
 
         return SignalProducer { subscriber, lifetime in
@@ -70,13 +117,14 @@ public extension SignalProducer where Value == TimeInterval, Error == NoError {
 }
 
 public extension PropertyProtocol where Value == Bool {
-    /// Create a property that computes a logical NOT in the latest value
+    
+    /// Create a `Property` that computes a logical NOT in the latest value
     prefix static func ! (a: Self) -> Property<Value> { return a.negate() }
     
-    /// Create a property that computes a logical OR between the latest values of two given properties.
+    /// Create a `Property` that computes a logical OR between the latest values of two given properties.
     static func || <P: PropertyProtocol> (lhs: Self, rhs: P) -> Property<Value> where P.Value == Value { return lhs.or(rhs) }
     
-    /// Create a property that computes a logical AND between the latest values of two given properties.
+    /// Create a `Property` that computes a logical AND between the latest values of two given properties.
     static func && <P: PropertyProtocol> (lhs: Self, rhs: P) -> Property<Bool> where P.Value == Value { return lhs.and(rhs) }
 }
 

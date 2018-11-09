@@ -16,8 +16,15 @@ extension MovieMaker.Filter {
     /// `UIView` for selecting `Filter`
     final class CollectionView: UIView {
         
+        // todo fix this bad
         /// `Delegate` for `Filter.CollectionView`
-        public weak var delegate: Delegate?
+        public weak var delegate: Delegate? {
+            didSet {
+                guard let delegate = self.delegate else { return }
+                
+                delegate.filterBindingTarget <~ self.model.filter
+            }
+        }
         
         /// `Model` for this `UIViewController`
         let model = Model()
@@ -38,7 +45,7 @@ extension MovieMaker.Filter {
             return collectionView
         }()
         
-        /// `UICollectionViewLayout` for `UICollectionView`
+        /// `UICollectionViewFlowLayout` for `UICollectionView`
         private let layout = UICollectionViewFlowLayout()
         
         override init(frame: CGRect = .zero) {
@@ -71,16 +78,6 @@ extension MovieMaker.Filter.CollectionView: UICollectionViewDelegateFlowLayout {
         
         self.model.indexPath.swap(indexPath)
     }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-
-        var size = MovieMaker.Filter.CollectionView.filterSize
-        
-        if self.model.orientation.value.isPortrait { size.height += 5 }
-        else { size.width += 5 }
-
-        return size
-    }
 }
 
 extension MovieMaker.Filter.CollectionView: UICollectionViewDataSource {
@@ -105,7 +102,7 @@ extension MovieMaker.Filter.CollectionView: UICollectionViewDataSource {
 // Private
 private extension MovieMaker.Filter.CollectionView {
     
-    /// `BindingTarget<ImageOrientation>` for adaptive orientation
+    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
     var orientation: BindingTarget<ImageOrientation> {
         return self.reactive.makeBindingTarget { `self`, value in
             `self`.updateLayout(orientation: value)
@@ -118,10 +115,6 @@ private extension MovieMaker.Filter.CollectionView {
         let disposable = CompositeDisposable()
         
         disposable += self.orientation <~ model.orientation
-        /*
-         let filter = CameraFilterCollectionView.filters[indexPath.row]
-         self.delegate?.filterDidSelect(filter)
-         */
 
         return disposable
     }

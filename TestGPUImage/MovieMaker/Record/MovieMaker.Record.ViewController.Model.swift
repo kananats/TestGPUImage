@@ -24,22 +24,13 @@ extension MovieMaker.Record.ViewController {
         }()
         
         /// Front `Camera`
-        private lazy var frontCamera: Camera! = {
-            return try? Camera(sessionPreset: .hd1280x720, location: .frontFacing)
-        }()
+        private lazy var frontCamera: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .frontFacing) }()
         
         /// Rear `Camera`
-        private lazy var backCamera: Camera! = {
-            return try? Camera(sessionPreset: .hd1280x720, location: .backFacing)
-        }()
-        
-        private let noFilter = GammaAdjustment()
-        private let smoothToonFilter = SmoothToonFilter()
+        private lazy var backCamera: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .backFacing) }()
         
         /// Current applied `Filter`
-        private lazy var filter: MutableProperty<ImageProcessingOperation> = {
-            return MutableProperty(self.noFilter)
-        }()
+        lazy var filter: MutableProperty<MovieMaker.Filter> = { return MutableProperty(.off) }()
         
         /// Preview this live output with `RenderView`
         let previewOutput = GammaAdjustment()
@@ -64,7 +55,7 @@ extension MovieMaker.Record.ViewController {
 
         /// `Action` to toggle recording on/ off. Timer takes priority.
         lazy var toggleRecordAction: Action<Void, Void, NoError> = {
-            return Action { [weak self] in
+            return Action(enabledIf: !self.isSelectingFilter) { [weak self] in
                 guard let `self` = self else { return .empty }
                 
                 let shouldStart = !`self`.isRecordingOrCountingDown.value
@@ -160,20 +151,8 @@ extension MovieMaker.Record.ViewController {
         }()
         
         /// `Action` to toggle `Filter` select view
-        lazy var filterSelectToggleAction: Action<Void, Void, NoError> = {
-            return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
-                guard let `self` = self else { return .empty }
-                
-                let shouldStart = !`self`.isSelectingFilter.value
-
-                return SignalProducer { subscriber, _ in
-                    subscriber.sendCompleted()
-                    
-                     guard shouldStart else { return }
-                    
-                    `self`.filterSelectAction.apply().start()
-                }
-            }
+        lazy var filterSelectToggleAction: Action<Void, Bool, NoError> = {
+            return filterSelectAction.makeToggleAction(enabledIf: !self.isRecordingOrCountingDown)
         }()
         
         /// `Action` to select `Filter`
@@ -182,15 +161,14 @@ extension MovieMaker.Record.ViewController {
                 guard let `self` = self else { return .empty }
                 
                 return SignalProducer { subscriber, lifetime in
-                    
-                    lifetime += `self`.filterSelectToggleAction.completed.signal.observeValues {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                         subscriber.sendCompleted()
                     }
                 }
             }
         }()
         
-        /// `Action` to dismiss `ViewController`
+        /// `Action` to dismiss `UIViewController`
         lazy var dismissAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
         
         init?() {
@@ -203,6 +181,9 @@ extension MovieMaker.Record.ViewController {
 
 // Public
 extension MovieMaker.Record.ViewController.Model {
+    
+    /// Maximum countdown timer duration
+    static let maxTimerDuration = 3
     
     /// Is currently recording
     var isRecording: Property<Bool> { return self.recordAction.isExecuting }
@@ -220,9 +201,11 @@ extension MovieMaker.Record.ViewController.Model {
     var countdownTimerDuration: Property<Int> {
         return Property(initial: MovieMaker.Record.ViewController.Model.maxTimerDuration, then: self.countdownAction.values)
     }
-    
-    /// Maximum countdown timer duration
-    static let maxTimerDuration = 3
+}
+
+// Protocol
+extension MovieMaker.Record.ViewController.Model: MovieMaker.Filter.CollectionView.Delegate {
+    var filterBindingTarget: BindingTarget<MovieMaker.Filter> { return self.filter.bindingTarget }
 }
 
 // Private
@@ -233,8 +216,8 @@ private extension MovieMaker.Record.ViewController.Model {
     func bind() -> Disposable {
         let disposable = CompositeDisposable()
         
-        // Apply filter
-        disposable += self.filter.producer.optionalize().combinePrevious(nil).startWithValues { [weak self] previous, current in
+        // Apply `Filter`
+        disposable += self.filter.map { $0.operation }.producer.optionalize().combinePrevious(nil).startWithValues { [weak self] previous, current in
             guard let `self` = self else { return }
             
             `self`.camera.value.removeAllTargets()
@@ -244,7 +227,7 @@ private extension MovieMaker.Record.ViewController.Model {
             current! --> `self`.previewOutput
         }
         
-        // Switch camera
+        // Switch `Camera`
         disposable += self.camera.producer.optionalize().combinePrevious(nil).startWithValues { [weak self] previous, current in
             guard let `self` = self else { return }
             
@@ -253,7 +236,7 @@ private extension MovieMaker.Record.ViewController.Model {
                 previous?.removeAllTargets()
             }
             
-            current!.addTarget(`self`.filter.value)
+            current!.addTarget(`self`.filter.value.operation)
             current!.startCapture()
         }
         

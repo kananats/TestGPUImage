@@ -17,7 +17,7 @@ extension MovieMaker.Filter.CollectionView {
     /// `Cell` used in `Filter.CollectionView`
     final class Cell: UICollectionViewCell {
 
-        /// `UIView` indicating whether `self` is being selected
+        /// `UIView` indicating whether this `Cell` is being selected
         fileprivate lazy var indicator: UIView = {
             let indicator = UIView()
             indicator.backgroundColor = .purple
@@ -55,12 +55,13 @@ extension MovieMaker.Filter.CollectionView {
 // Public
 extension MovieMaker.Filter.CollectionView.Cell {
     
-    /// `BindingTarget<ImageOrientation>` for adaptive orientation
+    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
     var orientation: BindingTarget<ImageOrientation> {
         return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
     }
     
-    /// Update cell information using `Filter`
+    // todo
+    /// Update `Cell` information using `Filter`
     func update(name: String, image: UIImage?) {
         self.label.text = name
         self.imageView.image = image

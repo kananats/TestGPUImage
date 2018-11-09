@@ -25,10 +25,13 @@ extension MovieMaker {
 // Public
 extension MovieMaker.Filter {
     /// Array containing all `Filter`
-    static let all: [MovieMaker.Filter] = [.off, .natural]
+    static let all: [MovieMaker.Filter] = [.off, .toon, .natural]
     
     /// Off `Filter`
-    static let off = MovieMaker.Filter(name: "Filter Off", operation: SaturationAdjustment())
+    static let off = MovieMaker.Filter(name: "Filter Off", operation: GammaAdjustment())
+    
+    /// Toon `Filter`
+    static let toon = MovieMaker.Filter(name: "Toon Filter", operation: SmoothToonFilter())
     
     /// Natural `Filter`
     static let natural = MovieMaker.Filter(name: "Natural", operation: SaturationAdjustment())

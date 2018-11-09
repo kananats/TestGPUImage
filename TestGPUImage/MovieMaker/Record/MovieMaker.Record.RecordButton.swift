@@ -67,7 +67,7 @@ extension MovieMaker.Record.RecordButton {
     /// `UIColor` for the background
     static let backgroundColor = UIColor.black.withAlphaComponent(0.6)
     
-    /// `BindingTarget<Bool>` for adaptive recording status
+    /// `BindingTarget<Bool>` for managing adaptive recording status
     var isRecording: BindingTarget<Bool> {
         return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
     }
