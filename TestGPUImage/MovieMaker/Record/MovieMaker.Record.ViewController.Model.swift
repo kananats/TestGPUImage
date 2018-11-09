@@ -157,9 +157,7 @@ extension MovieMaker.Record.ViewController {
             return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
                 guard let `self` = self else { return .empty }
                 
-                return SignalProducer { subscriber, lifetime in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { subscriber.sendCompleted() }
-                }
+                return .never
             }
         }()
         
@@ -194,11 +192,7 @@ extension MovieMaker.Record.ViewController.Model {
     
     /// Current countdown timer duration
     var countdownTimerDuration: Property<Int> {
-        let timerDuration = MovieMaker.Record.ViewController.Model.maxTimerDuration
-        
-        let signal = Signal.merge(self.countdownAction.values)//, self.isRecordingOrCountingDown.signal.filter { !$0 } .map { _ in timerDuration })
-        
-        return Property(initial: timerDuration, then: signal)
+        return Property(initial: MovieMaker.Record.ViewController.Model.maxTimerDuration, then: self.countdownAction.values)
     }
 }
 
