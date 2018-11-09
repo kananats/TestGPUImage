@@ -13,7 +13,8 @@ import ReactiveSwift
 import Result
 
 public extension Action {
-    /// Creates an instance of `Action` that would be conditionally enabled, wrapping the original `Action` and will terminate it only if it is being executed.
+    
+    /// Creates an instance of `Action` that would be conditionally enabled, wrapping the original `Action` and will terminate it only if it is being executed. `Bool` value indicating toggle on/ off will be sent as `Output`.
     func makeToggleAction<P: PropertyProtocol>(input: Input, enabledIf isEnabled: P) -> Action<Void, Bool, NoError> where P.Value == Bool {
         var disposable: Disposable?
         

@@ -29,16 +29,17 @@ extension MovieMaker.Record.ViewController {
         /// Rear `Camera`
         private lazy var backCamera: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .backFacing) }()
         
-        /// Current applied `Filter`
-        lazy var filter: MutableProperty<MovieMaker.Filter> = { return MutableProperty(.off) }()
-        
         /// Preview this live output with `RenderView`
         let previewOutput = GammaAdjustment()
+        
+        /// Current applied `Filter`
+        lazy var filter: MutableProperty<MovieMaker.Filter> = { return MutableProperty(.off) }()
         
         /// `MovieOutput` from the recording session
         private var movieOutput: MovieOutput!
         
-        /// `URL` of the exported movie file
+        /// `URL` of the exported movie file.
+        /// Calling this variable directly may lead to undefined behavior.
         private var fileURL: URL!
         
         /// Current `Camera` orientation
@@ -53,49 +54,47 @@ extension MovieMaker.Record.ViewController {
         /// Is countdown timer enabled
         let isCountdownEnabled = MutableProperty<Bool>(false)
 
-        /// `Action` to toggle recording on/ off. Timer takes priority.
-        lazy var toggleRecordAction: Action<Void, Void, NoError> = {
-            return Action(enabledIf: !self.isSelectingFilter) { [weak self] in
+        /// `Action` to start/ stop countdown timer (if any) then start/ stop recording
+        lazy var countdownOrRecordToggleAction: Action<Void, Bool, NoError> = {
+            return self.countdownOrRecordAction.makeToggleAction(enabledIf: !self.isSelectingFilter)
+        }()
+        
+        /// `Action` to start countdown timer (if any) then start recording
+        private lazy var countdownOrRecordAction: Action<Void, Void, NoError> = {
+            return Action() { [weak self] in
                 guard let `self` = self else { return .empty }
                 
-                let shouldStart = !`self`.isRecordingOrCountingDown.value
-                
-                return SignalProducer { subscriber, _ in
-                    subscriber.sendCompleted()
+                return SignalProducer { subscriber, lifetime in
+                    var timerDuration = 0
+                    if `self`.isCountdownEnabled.value { timerDuration = MovieMaker.Record.ViewController.Model.maxTimerDuration }
                     
-                    guard shouldStart else { return }
-
-                    let timerDuration = MovieMaker.Record.ViewController.Model.maxTimerDuration
-                    if timerDuration > 0, `self`.isCountdownEnabled.value { `self`.countdownAction.apply(timerDuration).start() }
-                    else { `self`.recordAction.apply().start() }
+                    lifetime += `self`.countdownAction.apply(timerDuration).startWithCompleted {
+                        lifetime += `self`.recordAction.apply().start()
+                    }
                 }
             }
         }()
         
-        /// `Action` to start countdown timer. Recording will take place right after timer expires.
+        /// `Action` to start countdown timer
         private lazy var countdownAction: Action<Int, Int, NoError> = {
             return Action { [weak self] input in
                 guard let `self` = self, input > 0 else { return .empty }
-                
+
                 return SignalProducer { subscriber, lifetime in
                     lifetime += SignalProducer.timer(from: TimeInterval(input)).startWithValues { value in
                         subscriber.send(value: Int(value))
                         if value <= 0 {
-                            `self`.recordAction.apply().start()
-                            
                             subscriber.send(value: input)
                             subscriber.sendCompleted()
                         }
                     }
                     
-                    lifetime += `self`.toggleRecordAction.completed.signal.observeValues {
+                    lifetime += `self`.countdownOrRecordToggleAction.values.filter { !$0 } .observeValues { _ in
                         subscriber.send(value: input)
-                        subscriber.sendInterrupted()
                     }
                 }
             }
         }()
-        
         
         /// `Action` to activate/ deactivate countdown timer
         lazy var countdownToggleAction: Action<Void, Void, NoError> = {
@@ -126,11 +125,9 @@ extension MovieMaker.Record.ViewController {
                     
                     lifetime += `self`.recordDuration <~ SignalProducer.stopwatch(interval: .milliseconds(16))
                     
-                    lifetime += `self`.toggleRecordAction.completed.signal.observeValues {
+                    lifetime += `self`.countdownOrRecordToggleAction.values.filter { !$0 } .observeValues { _ in
                         let fileURL = `self`.stopRecording()
-                        
                         subscriber.send(value: fileURL)
-                        subscriber.sendCompleted()
                     }
                 }
             }
@@ -161,9 +158,7 @@ extension MovieMaker.Record.ViewController {
                 guard let `self` = self else { return .empty }
                 
                 return SignalProducer { subscriber, lifetime in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                        subscriber.sendCompleted()
-                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { subscriber.sendCompleted() }
                 }
             }
         }()
@@ -192,14 +187,18 @@ extension MovieMaker.Record.ViewController.Model {
     var isCountingDown: Property<Bool> { return self.countdownAction.isExecuting }
     
     /// Is currently either recording or counting down
-    var isRecordingOrCountingDown: Property<Bool> { return self.isRecording || self.isCountingDown }
+    var isRecordingOrCountingDown: Property<Bool> { return self.countdownOrRecordAction.isExecuting }
     
     /// Is currently selecting `Filter`
     var isSelectingFilter: Property<Bool> { return self.filterSelectAction.isExecuting }
     
     /// Current countdown timer duration
     var countdownTimerDuration: Property<Int> {
-        return Property(initial: MovieMaker.Record.ViewController.Model.maxTimerDuration, then: self.countdownAction.values)
+        let timerDuration = MovieMaker.Record.ViewController.Model.maxTimerDuration
+        
+        let signal = Signal.merge(self.countdownAction.values)//, self.isRecordingOrCountingDown.signal.filter { !$0 } .map { _ in timerDuration })
+        
+        return Property(initial: timerDuration, then: signal)
     }
 }
 
@@ -220,10 +219,12 @@ private extension MovieMaker.Record.ViewController.Model {
         disposable += self.filter.map { $0.operation }.producer.optionalize().combinePrevious(nil).startWithValues { [weak self] previous, current in
             guard let `self` = self else { return }
             
-            `self`.camera.value.removeAllTargets()
+            let camera = `self`.camera.value
+            
+            camera.removeAllTargets()
             previous?.removeAllTargets()
             
-            `self`.camera.value.addTarget(current!)
+            camera.addTarget(current!)
             current! --> `self`.previewOutput
         }
         
@@ -239,12 +240,30 @@ private extension MovieMaker.Record.ViewController.Model {
             current!.addTarget(`self`.filter.value.operation)
             current!.startCapture()
         }
+    
+        // Debug purpose
+        disposable += self.debug()
+        
+        return disposable
+    }
+    
+    /// Method for debug purpose
+    func debug() -> Disposable {
+        let disposable = CompositeDisposable()
+        
+        disposable += self.isRecording.producer.startWithValues { print("isRecording \($0)") }
+        disposable += self.isCountingDown.producer.startWithValues { print("isCountingDown \($0)") }
+        disposable += self.recordAction.values.observeValues { print("recordingAction values \($0)") }
         
         return disposable
     }
     
     /// Implementation of start recording
     func startRecording(fileURL: URL) throws {
+        guard self.fileURL == nil else {
+            fatalError("Unable to execute `startRecording()` while `stopRecording()` has not been called.")
+        }
+        
         self.fileURL = fileURL
         
         try? FileManager.default.removeItem(at: self.fileURL)
@@ -258,11 +277,17 @@ private extension MovieMaker.Record.ViewController.Model {
     
     /// Implementation of stop recording
     func stopRecording() -> URL {
+        guard let fileURL = self.fileURL else {
+            fatalError("Unable to execute `stopRecording()` while `startRecording()` has not been called.")
+        }
+        
         self.movieOutput!.finishRecording {
             self.camera.value.audioEncodingTarget = nil
             self.movieOutput = nil
+            
+            self.fileURL = nil
         }
         
-        return self.fileURL!
+        return fileURL
     }
 }
