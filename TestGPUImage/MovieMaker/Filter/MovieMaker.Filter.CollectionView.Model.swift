@@ -12,7 +12,7 @@ import GPUImage
 
 extension MovieMaker.Filter.CollectionView {
     
-    /// `Model` to be binded with `Filter.CollectionView`
+    /// `Model` to be binded with `MovieMaker.Filter.CollectionView`
     final class Model {
         
         /// Current `Camera` orientation
@@ -21,7 +21,7 @@ extension MovieMaker.Filter.CollectionView {
             return MutableProperty(orientation)
         }()
         
-        /// Current selected `IndexPath` of `Filter.CollectionView`
+        /// Current selected `IndexPath` of `MovieMaker.Filter.CollectionView`
         let indexPath = MutableProperty<IndexPath>(IndexPath(row: 0, section: 0))
     }
 }
@@ -29,7 +29,7 @@ extension MovieMaker.Filter.CollectionView {
 // Public
 extension MovieMaker.Filter.CollectionView.Model {
     
-    /// Current applied `Filter`
+    /// Current applied `MovieMaker.Filter`
     var filter: Property<MovieMaker.Filter> {
         return self.indexPath.map { value in MovieMaker.Filter.all[value.row] }
     }

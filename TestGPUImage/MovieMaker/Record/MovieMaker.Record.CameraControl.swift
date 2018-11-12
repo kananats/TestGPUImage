@@ -17,7 +17,7 @@ extension MovieMaker.Record {
     /// `UIView` which consists of interactive elements for controlling `MovieMaker.Record.ViewController`
     final class CameraControl: UIView {
         
-        /// `UIButton` for recording
+        /// `UIButton` for start/ stop recording
         private lazy var recordButton: RecordButton = { return RecordButton() }()
 
         /// `UIButton` for switching between front/ rear `Camera`
@@ -90,8 +90,8 @@ extension MovieMaker.Record.CameraControl {
     func bind(_ model: MovieMaker.Record.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += model.filterBindingTarget <~ self.filterCollectionView.model.filter
-        
+        disposable += model.filterBindingTarget <~ self.filterCollectionView.filter
+        disposable += self.filterCollectionView.orientationBindingTarget <~ model.orientation
         disposable += self.orientation <~ model.orientation
         disposable += self.recordButton.bind(model)
         disposable += self.timeLabel.time <~ model.recordDuration

@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreGraphics
+import Result
 import ReactiveSwift
 import GPUImage
 
@@ -17,7 +18,7 @@ extension MovieMaker.Filter {
     final class CollectionView: UIView {
         
         /// `Model` for this `UIViewController`
-        let model = Model()
+        private let model = Model()
 
         /// `UICollectionView` for selecting `Filter`
         private lazy var collectionView: UICollectionView = {
@@ -56,8 +57,16 @@ extension MovieMaker.Filter {
 // Public
 extension MovieMaker.Filter.CollectionView {
     
-    /// `CGSize` of the filter preview area
+    /// `CGSize` of the `Filter` select view
     static let filterSize = CGSize(width: 85, height: 60)
+    
+    /// `Signal<Filter, NoError>` as the binding source
+    var filter: Signal<MovieMaker.Filter, NoError> { return self.model.filter.signal }
+    
+    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
+    var orientationBindingTarget: BindingTarget<ImageOrientation> {
+        return self.model.orientation.bindingTarget
+    }
 }
 
 // Protocol
@@ -71,8 +80,8 @@ extension MovieMaker.Filter.CollectionView: UICollectionViewDelegateFlowLayout {
 }
 
 extension MovieMaker.Filter.CollectionView: UICollectionViewDataSource {
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-
         return MovieMaker.Filter.all.count
     }
     
@@ -109,6 +118,7 @@ private extension MovieMaker.Filter.CollectionView {
         return disposable
     }
     
+    
     /// Layout initialization
     func createLayout() {
         self.addSubview(self.collectionView)
@@ -125,7 +135,7 @@ private extension MovieMaker.Filter.CollectionView {
     
     /// Update constraints to fit new `ImageOrientation`
     func updateLayout(orientation: ImageOrientation) {
-        
+
         // Change item size
         var itemSize = MovieMaker.Filter.CollectionView.filterSize
         if orientation.isPortrait { itemSize.height += 5 }
@@ -133,8 +143,8 @@ private extension MovieMaker.Filter.CollectionView {
         self.layout.itemSize = itemSize
         
         // Change scroll direction
-        var scrollDirection: UICollectionView.ScrollDirection = .horizontal
-        if orientation.isPortrait { scrollDirection = .vertical  }
+        var scrollDirection: UICollectionView.ScrollDirection = .vertical
+        if orientation.isPortrait { scrollDirection = .horizontal  }
         self.layout.scrollDirection = scrollDirection
     }
 }

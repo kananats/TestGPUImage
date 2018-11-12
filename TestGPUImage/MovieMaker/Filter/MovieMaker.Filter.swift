@@ -24,8 +24,9 @@ extension MovieMaker {
 
 // Public
 extension MovieMaker.Filter {
+    
     /// Array containing all `Filter`
-    static let all: [MovieMaker.Filter] = [.off, .toon, .natural]
+    static let all: [MovieMaker.Filter] = [.off, .toon, .natural, .natural, .natural]
     
     /// Off `Filter`
     static let off = MovieMaker.Filter(name: "Filter Off", operation: GammaAdjustment())

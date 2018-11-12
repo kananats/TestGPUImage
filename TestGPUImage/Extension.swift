@@ -12,6 +12,22 @@ import GPUImage
 import ReactiveSwift
 import Result
 
+public extension Camera {
+    
+    /// Front `Camera`
+    static let front: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .frontFacing) }()
+    
+    /// Back `Camera`
+    static let back: Camera! = { return try? Camera(sessionPreset: .hd1280x720, location: .backFacing) }()
+    
+    /// Swap between front and back `Camera`
+    func swap() -> Camera! {
+        if self == .front { return .back }
+        if self == .back { return .front }
+        return nil
+    }
+}
+
 extension ImageOrientation: CustomStringConvertible {
     
     public var description: String {
