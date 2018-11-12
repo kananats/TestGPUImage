@@ -7,6 +7,6 @@
 //
 
 /// Namespace `MovieMaker`
-final class MovieMaker { private init() { } }
+public final class MovieMaker { private init() { } }
 
 

@@ -17,7 +17,7 @@ extension MovieMaker.Record {
     final class TimeLabel: UIView {
         
         /// `UIImageView` attached
-        private lazy var imageView = { return UIImageView() }()
+        private let imageView = UIImageView()
         
         /// `UILabel` which presents current duration of the recording session
         private lazy var label: UILabel = {

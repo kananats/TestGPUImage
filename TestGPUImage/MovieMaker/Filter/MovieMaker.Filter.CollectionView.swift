@@ -29,7 +29,7 @@ extension MovieMaker.Filter {
             collectionView.delegate = self
             collectionView.dataSource = self
             
-            collectionView.backgroundColor = .clear
+            collectionView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
             collectionView.showsHorizontalScrollIndicator = false
             collectionView.showsVerticalScrollIndicator = false
 
@@ -89,8 +89,7 @@ extension MovieMaker.Filter.CollectionView: UICollectionViewDataSource {
 
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Cell.reuseIdentifier, for: indexPath) as! Cell
         
-        let filter = MovieMaker.Filter.all[indexPath.row]
-        cell.update(name: filter.name, image: nil)
+        cell.update(filter: MovieMaker.Filter.all[indexPath.row])
         
         cell.reactive.isSelected <~ self.model.indexPath.map { $0 == indexPath }
 

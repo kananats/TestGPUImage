@@ -18,6 +18,7 @@
 		59269E822192DF4D00098F72 /* MovieMaker.Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59269E812192DF4D00098F72 /* MovieMaker.Filter.swift */; };
 		59269E842192E00300098F72 /* MovieMaker.Filter.CollectionView.Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59269E832192E00300098F72 /* MovieMaker.Filter.CollectionView.Delegate.swift */; };
 		59269E862192E5B700098F72 /* MovieMaker.Filter.CollectionView.Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59269E852192E5B700098F72 /* MovieMaker.Filter.CollectionView.Cell.swift */; };
+		599E922221995FE50035F1B2 /* MovieMaker.Record.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 599E922121995FE50035F1B2 /* MovieMaker.Record.Shape.swift */; };
 		59BA28562186AB7E00FC9D65 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59BA28552186AB7E00FC9D65 /* AppDelegate.swift */; };
 		59BA28582186AB7E00FC9D65 /* MovieMaker.Record.ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59BA28572186AB7E00FC9D65 /* MovieMaker.Record.ViewController.swift */; };
 		59BA285D2186AB7F00FC9D65 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 59BA285C2186AB7F00FC9D65 /* Assets.xcassets */; };
@@ -62,6 +63,7 @@
 		59269E812192DF4D00098F72 /* MovieMaker.Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieMaker.Filter.swift; sourceTree = "<group>"; };
 		59269E832192E00300098F72 /* MovieMaker.Filter.CollectionView.Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieMaker.Filter.CollectionView.Delegate.swift; sourceTree = "<group>"; };
 		59269E852192E5B700098F72 /* MovieMaker.Filter.CollectionView.Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieMaker.Filter.CollectionView.Cell.swift; sourceTree = "<group>"; };
+		599E922121995FE50035F1B2 /* MovieMaker.Record.Shape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieMaker.Record.Shape.swift; sourceTree = "<group>"; };
 		59BA28522186AB7E00FC9D65 /* TestGPUImage.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestGPUImage.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		59BA28552186AB7E00FC9D65 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		59BA28572186AB7E00FC9D65 /* MovieMaker.Record.ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieMaker.Record.ViewController.swift; sourceTree = "<group>"; };
@@ -209,6 +211,7 @@
 		59C4853B21894C71007A6C9F /* Record */ = {
 			isa = PBXGroup;
 			children = (
+				599E922121995FE50035F1B2 /* MovieMaker.Record.Shape.swift */,
 				5914F141218AD60F000E7FCF /* MovieMaker.Record.CameraControl.swift */,
 				59C4856A218982F7007A6C9F /* MovieMaker.Record.RecordButton.swift */,
 				59269E7C2192966200098F72 /* MovieMaker.Record.TimeLabel.swift */,
@@ -385,6 +388,7 @@
 				591ADC3A2193E9F40021423A /* MovieMaker.Filter.CollectionView.Model.swift in Sources */,
 				59269E862192E5B700098F72 /* MovieMaker.Filter.CollectionView.Cell.swift in Sources */,
 				59269E842192E00300098F72 /* MovieMaker.Filter.CollectionView.Delegate.swift in Sources */,
+				599E922221995FE50035F1B2 /* MovieMaker.Record.Shape.swift in Sources */,
 				5914F142218AD60F000E7FCF /* MovieMaker.Record.CameraControl.swift in Sources */,
 				59C4856B218982F7007A6C9F /* MovieMaker.Record.RecordButton.swift in Sources */,
 				59269E7D2192966200098F72 /* MovieMaker.Record.TimeLabel.swift in Sources */,

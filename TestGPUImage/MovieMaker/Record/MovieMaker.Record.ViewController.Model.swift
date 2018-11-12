@@ -45,7 +45,9 @@ extension MovieMaker.Record.ViewController {
         let recordDuration = MutableProperty<TimeInterval>(0)
         
         /// Is countdown timer enabled
-        let isCountdownEnabled = MutableProperty<Bool>(false)
+        lazy var isCountdownEnabled: Property<Bool> = {
+            return Property(initial: false, then: self.countdownToggleAction.values)
+        }()
 
         /// `Action` to start/ stop countdown timer (if any) then start/ stop recording
         lazy var countdownOrRecordToggleAction: Action<Void, Bool, NoError> = {
@@ -89,15 +91,36 @@ extension MovieMaker.Record.ViewController {
             }
         }()
         
+        /// Current `Shape`
+        lazy var shape: Property<Shape> = {
+            return Property(initial: .square, then: self.shapeChangeAction.values)
+        }()
+        
+        /// `Action` to switch `Shape` between square and rectangle
+        lazy var shapeChangeAction: Action<Void, Shape, NoError> = {
+            return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
+                guard let `self` = self else { return .empty }
+                
+                let value = `self`.shape.value.swap()
+                
+                return SignalProducer { subscriber, _ in
+                    subscriber.send(value: value)
+                    subscriber.sendCompleted()
+                }
+            }
+        }()
+        
         /// `Action` to enable/ disable countdown timer
-        lazy var countdownToggleAction: Action<Void, Void, NoError> = {
+        lazy var countdownToggleAction: Action<Void, Bool, NoError> = {
             return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
                 guard let `self` = self else { return .empty }
                 
                 let value = !`self`.isCountdownEnabled.value
-                `self`.isCountdownEnabled.swap(value)
                 
-                return .empty
+                return SignalProducer { subscriber, _ in
+                    subscriber.send(value: value)
+                    subscriber.sendCompleted()
+                }
             }
         }()
         
@@ -185,6 +208,8 @@ extension MovieMaker.Record.ViewController.Model {
     /// Is currently selecting `Filter`
     var isSelectingFilter: Property<Bool> { return self.filterSelectAction.isExecuting }
     
+
+    
     /// Current countdown timer duration
     var countdownTimerDuration: Property<Int> {
         return Property(initial: MovieMaker.Record.ViewController.Model.maxTimerDuration, then: self.countdownAction.values)
@@ -231,7 +256,7 @@ private extension MovieMaker.Record.ViewController.Model {
         }
     
         // Debug purpose
-        // disposable += self.debug()
+        disposable += self.debug()
         
         return disposable
     }
@@ -243,6 +268,7 @@ private extension MovieMaker.Record.ViewController.Model {
         disposable += self.isRecording.producer.startWithValues { print("isRecording \($0)") }
         disposable += self.isCountingDown.producer.startWithValues { print("isCountingDown \($0)") }
         disposable += self.recordAction.values.observeValues { print("recordingAction values \($0)") }
+        disposable += self.shape.producer.startWithValues { print("shape \($0)") }
         
         return disposable
     }
@@ -250,7 +276,7 @@ private extension MovieMaker.Record.ViewController.Model {
     /// Implementation of start recording
     func startRecording(fileURL: URL) throws {
         guard self.fileURL == nil else {
-            fatalError("Unable to execute `startRecording()` while `stopRecording()` has not been called.")
+            fatalError("Unable to execute `startRecording()` while `stopRecording()` has not been called yet.")
         }
         
         self.fileURL = fileURL
@@ -267,7 +293,7 @@ private extension MovieMaker.Record.ViewController.Model {
     /// Implementation of stop recording
     func stopRecording() -> URL {
         guard let fileURL = self.fileURL else {
-            fatalError("Unable to execute `stopRecording()` while `startRecording()` has not been called.")
+            fatalError("Unable to execute `stopRecording()` while `startRecording()` has not been called yet.")
         }
         
         self.movieOutput!.finishRecording {

@@ -18,21 +18,17 @@ extension MovieMaker.Filter.CollectionView {
     final class Cell: UICollectionViewCell {
 
         /// `UIView` indicating whether this `Cell` is being selected
-        fileprivate lazy var indicator: UIView = {
+        fileprivate let indicator: UIView = {
             let indicator = UIView()
             indicator.backgroundColor = .purple
             return indicator
         }()
         
-        /// `UIImageView` showing filter sample
-        lazy var imageView: UIImageView = {
-            let imageView = UIImageView()
-            imageView.backgroundColor = UIColor.black.withAlphaComponent(0.45)
-            return imageView
-        }()
+        /// `UIImageView` showing filter preview
+        let preview = UIImageView()
         
-        /// `UILabel` showing filter name
-        lazy var label: UILabel = {
+        /// `UILabel` showing `Filter` name
+        let name: UILabel = {
             let label = UILabel()
             label.font = .systemFont(ofSize: 10)
             label.textColor = .white
@@ -60,11 +56,10 @@ extension MovieMaker.Filter.CollectionView.Cell {
         return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(value) }
     }
     
-    // todo
-    /// Update `Cell` information using `Filter`
-    func update(name: String, image: UIImage?) {
-        self.label.text = name
-        self.imageView.image = image
+    /// Update `Cell` information using `Filter` information
+    func update(filter: MovieMaker.Filter) {
+        self.name.text = filter.name
+        self.preview.image = filter.preview
     }
 }
 
@@ -79,8 +74,8 @@ private extension MovieMaker.Filter.CollectionView.Cell {
     /// Layout initialization
     func createLayout() {
         self.contentView.addSubview(self.indicator)
-        self.contentView.addSubview(self.imageView)
-        self.contentView.addSubview(self.label)
+        self.contentView.addSubview(self.preview)
+        self.contentView.addSubview(self.name)
         
         self.updateLayout(.portrait)
     }
@@ -90,9 +85,9 @@ private extension MovieMaker.Filter.CollectionView.Cell {
         if orientation.isPortrait { self.updatePortraitLayout() }
         else { self.updateLandscapeLayout() }
         
-        self.label.snp.remakeConstraints { make in
-            make.left.equalTo(self.imageView).offset(2)
-            make.bottom.equalTo(self.imageView).offset(-2)
+        self.name.snp.remakeConstraints { make in
+            make.left.equalTo(self.preview).offset(2)
+            make.bottom.equalTo(self.preview).offset(-2)
         }
     }
     
@@ -105,7 +100,7 @@ private extension MovieMaker.Filter.CollectionView.Cell {
             make.centerY.equalTo(self)
         }
         
-        self.imageView.snp.remakeConstraints { make in
+        self.preview.snp.remakeConstraints { make in
             make.size.equalTo(MovieMaker.Filter.CollectionView.filterSize)
             make.left.equalTo(self.indicator.snp.right).offset(2)
             make.centerY.equalTo(self.contentView)
@@ -121,7 +116,7 @@ private extension MovieMaker.Filter.CollectionView.Cell {
             make.top.equalTo(self)
         }
         
-        self.imageView.snp.remakeConstraints { make in
+        self.preview.snp.remakeConstraints { make in
             make.size.equalTo(MovieMaker.Filter.CollectionView.filterSize)
             make.top.equalTo(self.snp.bottom).offset(2)
             make.centerX.equalTo(self.contentView)

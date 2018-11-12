@@ -8,9 +8,9 @@
 
 import Foundation
 import UIKit
-import GPUImage
 import ReactiveCocoa
 import ReactiveSwift
+import GPUImage
 
 extension MovieMaker.Record {
     
@@ -18,10 +18,10 @@ extension MovieMaker.Record {
     final class CameraControl: UIView {
         
         /// `UIButton` for start/ stop recording
-        private lazy var recordButton: RecordButton = { return RecordButton() }()
+        private let recordButton = RecordButton()
 
         /// `UIButton` for switching between front/ rear `Camera`
-        private lazy var cameraSwitchButton: UIButton = {
+        private let cameraSwitchButton: UIButton = {
             let button = UIButton()
             button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
             button.layer.cornerRadius = 20
@@ -29,11 +29,20 @@ extension MovieMaker.Record {
             return button
         }()
         
+        /// `UIButton` for changing shape mode
+        private let shapeChangeButton: UIButton = {
+            let button = UIButton()
+            button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+            button.layer.cornerRadius = 20
+            //button.setImage(UIImage(named: "icoSizeOff")!, for: .normal)
+            return button
+        }()
+        
         /// `TimeLabel` for presenting current duration of the recording session
-        private lazy var timeLabel: TimeLabel = { return TimeLabel(image: UIImage(named: "icoMovie")!) }()
+        private let timeLabel = TimeLabel(image: UIImage(named: "icoMovie")!)
         
         /// `UIButton` for activating/ deactivating countdown timer
-        private lazy var countdownToggleButton: UIButton = {
+        private let countdownToggleButton: UIButton = {
             let button = UIButton()
             button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
             button.layer.cornerRadius = 20
@@ -41,7 +50,7 @@ extension MovieMaker.Record {
         }()
         
         /// `UILabel` for presenting countdown timer
-        private lazy var countdownLabel: UILabel = {
+        private let countdownLabel: UILabel = {
             let label = UILabel()
             label.textColor = UIColor(red: 1, green: 1, blue: 1, alpha: 0.9)
             label.textAlignment = .center
@@ -50,7 +59,7 @@ extension MovieMaker.Record {
         }()
         
         /// `UIButton` for showing/ hiding `Filter.CollectionView`
-        private lazy var filterCollectionViewToggleButton: UIButton = {
+        private let filterCollectionViewToggleButton: UIButton = {
             let button = UIButton()
             button.setImage(UIImage(named: "icoFilter"), for: .normal)
             button.backgroundColor = UIColor.black.withAlphaComponent(0.7)
@@ -59,12 +68,10 @@ extension MovieMaker.Record {
         }()
         
         /// `Filter.CollectionView` for selecting `Filter`
-        private lazy var filterCollectionView: MovieMaker.Filter.CollectionView = {
-            return MovieMaker.Filter.CollectionView()
-        }()
+        private let filterCollectionView = MovieMaker.Filter.CollectionView()
         
         /// `UIButton` for dismissing `UIViewController`
-        private lazy var dismissButton: UIButton = {
+        private let dismissButton: UIButton = {
             let button = UIButton()
             button.setImage(UIImage(named: "icoClose")!, for: .normal)
             return button
@@ -94,6 +101,7 @@ extension MovieMaker.Record.CameraControl {
         disposable += self.filterCollectionView.orientationBindingTarget <~ model.orientation
         disposable += self.orientation <~ model.orientation
         disposable += self.recordButton.bind(model)
+        disposable += self.shapeChangeButton.reactive.image(for: .normal) <~ model.shape.map { $0.swap().buttonImage }
         disposable += self.timeLabel.time <~ model.recordDuration
         disposable += self.countdownToggleButton.reactive.image(for: .normal) <~ model.isCountdownEnabled.map { $0 ? UIImage(named: "icoTimerOff")! : UIImage(named: "icoTimer")! }
         disposable += self.countdownLabel.reactive.isHidden <~ (!model.isCountdownEnabled || model.isRecording)
@@ -101,6 +109,7 @@ extension MovieMaker.Record.CameraControl {
         disposable += self.filterCollectionView.reactive.isHidden <~ !model.isSelectingFilter
         
         self.cameraSwitchButton.reactive.pressed = CocoaAction(model.cameraSwitchAction)
+        self.shapeChangeButton.reactive.pressed = CocoaAction(model.shapeChangeAction)
         self.countdownToggleButton.reactive.pressed = CocoaAction(model.countdownToggleAction)
         self.filterCollectionViewToggleButton.reactive.pressed = CocoaAction(model.filterSelectToggleAction)
         self.dismissButton.reactive.pressed = CocoaAction(model.dismissAction)
@@ -121,6 +130,7 @@ private extension MovieMaker.Record.CameraControl {
     func createLayout() {
         self.addSubview(self.recordButton)
         self.addSubview(self.cameraSwitchButton)
+        self.addSubview(self.shapeChangeButton)
         self.addSubview(self.timeLabel)
         self.addSubview(self.countdownToggleButton)
         self.addSubview(self.countdownLabel)
@@ -147,7 +157,6 @@ private extension MovieMaker.Record.CameraControl {
             make.centerX.centerY.equalTo(self)
         }
         
-        // Temporary
         self.dismissButton.snp.remakeConstraints { make in
             make.width.height.equalTo(20)
             make.left.equalToSuperview().offset(20)
@@ -166,6 +175,12 @@ private extension MovieMaker.Record.CameraControl {
         self.cameraSwitchButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
             make.left.equalTo(self.snp.right).multipliedBy(74.0 / 375.0)
+            make.centerY.equalTo(self.recordButton)
+        }
+        
+        self.shapeChangeButton.snp.remakeConstraints { make in
+            make.width.height.equalTo(40)
+            make.left.equalTo(self.snp.right).multipliedBy(18.0 / 375.0)
             make.centerY.equalTo(self.recordButton)
         }
         
@@ -200,6 +215,12 @@ private extension MovieMaker.Record.CameraControl {
         self.cameraSwitchButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
             make.top.equalTo(self.snp.bottom).multipliedBy(261.0 / 375.0)
+            make.centerX.equalTo(self.recordButton)
+        }
+        
+        self.shapeChangeButton.snp.remakeConstraints { make in
+            make.width.height.equalTo(40)
+            make.top.equalTo(self.snp.bottom).multipliedBy(317.0 / 375.0)
             make.centerX.equalTo(self.recordButton)
         }
         

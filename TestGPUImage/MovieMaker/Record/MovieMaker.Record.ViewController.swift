@@ -14,17 +14,18 @@ import SnapKit
 import CoreMedia
 
 extension MovieMaker.Record {
+    
     /// `UIViewController` for recording
     final class ViewController: UIViewController {
         
         /// `Model` for this `UIViewController`
-        private lazy var model: Model! = { return Model() }()
+        private let model: Model! = Model()
         
         /// Interactive control elements
-        private lazy var cameraControl: CameraControl = { return CameraControl() }()
+        private let cameraControl = CameraControl()
         
         /// Live preview
-        private lazy var renderView: RenderView = {
+        private let renderView: RenderView = {
             let renderView = RenderView()
             renderView.fillMode = .stretch
             
