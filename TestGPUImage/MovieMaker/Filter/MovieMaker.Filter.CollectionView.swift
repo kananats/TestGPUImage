@@ -45,7 +45,7 @@ extension MovieMaker.Filter {
             self.backgroundColor = .clear
             
             self.createLayout()
-            self.bind(self.model)
+            self.bind(with: self.model)
         }
         
         required init?(coder aDecoder: NSCoder) {
@@ -109,7 +109,7 @@ private extension MovieMaker.Filter.CollectionView {
     
     /// Bind with `Model`
     @discardableResult
-    func bind(_ model: Model) -> Disposable {
+    func bind(with model: Model) -> Disposable {
         let disposable = CompositeDisposable()
         
         disposable += self.orientation <~ model.orientation

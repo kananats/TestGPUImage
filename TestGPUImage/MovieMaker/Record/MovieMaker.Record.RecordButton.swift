@@ -47,7 +47,7 @@ extension MovieMaker.Record.RecordButton {
     
     /// Bind with `Record.ViewController.Model`
     @discardableResult
-    func bind(_ model: MovieMaker.Record.ViewController.Model) -> Disposable {
+    func bind(with model: MovieMaker.Record.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
         self.isRecording <~ model.isRecording

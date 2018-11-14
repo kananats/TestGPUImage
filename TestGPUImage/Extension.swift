@@ -12,3 +12,13 @@ import GPUImage
 import ReactiveSwift
 import Result
 
+public extension Camera {
+    
+    /// Shorthand for executing `stopCapture()` then `removeAllTargets` on `sharedImageProcessingContext`
+    func stopThenRemoveAllTargets() {
+        sharedImageProcessingContext.runOperationSynchronously{
+            self.stopCapture()
+            self.removeAllTargets()
+        }
+    }
+}

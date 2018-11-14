@@ -95,12 +95,12 @@ extension MovieMaker.Record.CameraControl {
     
     /// Bind with `Record.ViewController.Model`
     @discardableResult
-    func bind(_ model: MovieMaker.Record.ViewController.Model) -> Disposable {
+    func bind(with model: MovieMaker.Record.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
         disposable += model.filterBindingTarget <~ self.filterCollectionView.filter
         disposable += [self.orientation, self.filterCollectionView.orientationBindingTarget] <~ model.orientation
-        disposable += self.recordButton.bind(model)
+        disposable += self.recordButton.bind(with: model)
         disposable += self.shapeChangeButton.reactive.image(for: .normal) <~ model.shape.map { $0.swap().switchButtonImage }
         disposable += self.timeLabel.time <~ model.recordDuration
         disposable += self.countdownToggleButton.reactive.image(for: .normal) <~ model.isCountdownEnabled.map { $0 ? UIImage(named: "icoTimerOff")! : UIImage(named: "icoTimer")! }

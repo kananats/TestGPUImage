@@ -15,13 +15,13 @@ extension MovieMaker.Filter.CollectionView {
     /// `Model` to be binded with `MovieMaker.Filter.CollectionView`
     final class Model {
         
-        /// Current `Camera` orientation
+        /// Current `ImageOrientation` of `Camera` (observable)
         lazy var orientation: MutableProperty<ImageOrientation> = {
             let orientation = ImageOrientation.from(deviceOrientation: UIDevice.current.orientation) ?? .portrait
             return MutableProperty(orientation)
         }()
         
-        /// Current selected `IndexPath` of `MovieMaker.Filter.CollectionView`
+        /// Current selected `IndexPath` of `CollectionView` (observable)
         let indexPath = MutableProperty<IndexPath>(IndexPath(row: 0, section: 0))
     }
 }
@@ -29,7 +29,7 @@ extension MovieMaker.Filter.CollectionView {
 // Public
 extension MovieMaker.Filter.CollectionView.Model {
     
-    /// Current applied `MovieMaker.Filter`
+    /// Current applied `MovieMaker.Filter` (observable)
     var filter: Property<MovieMaker.Filter> {
         return self.indexPath.map { value in MovieMaker.Filter.all[value.row] }
     }

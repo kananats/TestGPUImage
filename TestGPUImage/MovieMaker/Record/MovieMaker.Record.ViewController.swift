@@ -64,7 +64,7 @@ extension MovieMaker.Record.ViewController {
             return
         }
         
-        self.bind(self.model)
+        self.bind(with: self.model)
 
         self.model.previewOutput --> self.renderView
     }
@@ -88,30 +88,25 @@ private extension MovieMaker.Record.ViewController {
     
     /// Bind with `Model`
     @discardableResult
-    func bind(_ model: Model) -> Disposable {
+    func bind(with model: Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += self.cameraControl.bind(model)
-        
-        disposable += self.orientation <~ model.orientation
-        disposable += self.shape <~ model.shape
+        disposable += self.cameraControl.bind(with: model)
+
+        disposable += Property.combineLatest(model.orientation, model.shape).producer.startWithValues { [weak self] orientation, shape in
+            guard let `self` = self else { return }
+            
+            `self`.updateLayout(orientation: orientation, shape: shape)
+        }
         
         // Dismiss `UIViewController`
         disposable += model.dismissAction.values.observeValues { [weak self] _ in
-            self?.dismiss(animated: true)
+            guard let `self` = self else { return }
+
+            `self`.dismiss(animated: true)
         }
         
         return disposable
-    }
-    
-    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
-    var orientation: BindingTarget<ImageOrientation> {
-        return self.reactive.makeBindingTarget { `self`, value in `self`.renderView.orientation = value }
-    }
-    
-    /// `BindingTarget<Shape>` for managing adaptive `Shape`
-    var shape: BindingTarget<Shape> {
-        return self.reactive.makeBindingTarget { `self`, value in `self`.updateShape(value) }
     }
     
     /// Layout initialization
@@ -128,12 +123,15 @@ private extension MovieMaker.Record.ViewController {
         self.cameraControl.snp.remakeConstraints { make in make.edges.equalToSuperview() }
     }
 
-    /// Update mask area corresponding to `Shape`
-    func updateShape(_ shape: Shape) {
-        let frame = self.view.bounds.applying(shape)
-        print(frame)
-        let (bounds, position) = frame.makeBoundsAndPosition()
+    /// Update constraints to corresponding `ImageOrientation` and `Shape`
+    func updateLayout(orientation: ImageOrientation, shape: Shape) {
+        self.renderView.orientation = orientation
 
+        var frame = self.view.bounds
+        if frame.width > frame.height { frame = frame.transpose() }
+        
+        let (bounds, position) = frame.applying(orientation: orientation, shape: shape).makeBoundsAndPosition()
+        
         self.mask.bounds = bounds
         self.mask.position = position
     }

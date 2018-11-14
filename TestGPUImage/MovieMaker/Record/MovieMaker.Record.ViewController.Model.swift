@@ -18,14 +18,14 @@ extension MovieMaker.Record.ViewController {
     /// `Model` to be binded with `Record.ViewController`
     final class Model {
         
-        /// Current `Camera`
+        /// Current `Camera` (observable)
         private let camera: MutableProperty<Camera>
         
         /// Preview this live output with `RenderView`
         let previewOutput = GammaAdjustment()
         
-        /// Current applied `Filter`
-        lazy var filter: MutableProperty<MovieMaker.Filter> = { return MutableProperty(.off) }()
+        /// Current applied `Filter` (observable)
+        let filter = MutableProperty<MovieMaker.Filter>(.off)
         
         /// `MovieOutput` from the recording session
         /// Calling this variable directly may lead to undefined behavior.
@@ -35,16 +35,16 @@ extension MovieMaker.Record.ViewController {
         /// Calling this variable directly may lead to undefined behavior.
         private var fileURL: URL!
         
-        /// Current `Camera` orientation
-        lazy var orientation: MutableProperty<ImageOrientation> = {
+        /// Current `ImageOrientation` of `Camera` (observable)
+        let orientation: MutableProperty<ImageOrientation> = {
             let orientation = ImageOrientation.from(deviceOrientation: UIDevice.current.orientation) ?? .portrait
             return MutableProperty(orientation)
         }()
         
-        /// Current recording session duration
+        /// Current recording session duration (observable)
         let recordDuration = MutableProperty<TimeInterval>(0)
         
-        /// Is countdown timer enabled
+        /// Is countdown timer enabled (observable)
         lazy var isCountdownEnabled: Property<Bool> = {
             return Property(initial: false, then: self.countdownToggleAction.values)
         }()
@@ -91,8 +91,19 @@ extension MovieMaker.Record.ViewController {
             }
         }()
         
-        /// Current `Shape`
+        /// Actual `Shape` (observable)
+        /// This will always return rectangle when in landscape.
         lazy var shape: Property<Shape> = {
+            let signal = Signal.merge(self.userSelectedShape.signal, self.orientation.signal.map { [weak self] value -> Shape in
+                if value.isPortrait, let shape = self?.userSelectedShape.value { return shape }
+                return .rectangle
+            }).skipRepeats()
+            
+            return Property(initial: .rectangle, then: signal)
+        }()
+        
+        /// `Shape` that user selected (observable)
+        private lazy var userSelectedShape: Property<Shape> = {
             return Property(initial: .rectangle, then: self.shapeChangeAction.values)
         }()
         
@@ -101,7 +112,7 @@ extension MovieMaker.Record.ViewController {
             return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
                 guard let `self` = self else { return .empty }
                 
-                let value = `self`.shape.value.swap()
+                let value = `self`.userSelectedShape.value.swap()
                 
                 return SignalProducer { subscriber, _ in
                     subscriber.send(value: value)
@@ -186,7 +197,9 @@ extension MovieMaker.Record.ViewController {
             self.bind()
         }
         
-        deinit {  self.camera.value.removeAllTargets() }
+        deinit {
+            self.camera.value.stopThenRemoveAllTargets()
+        }
     }
 }
 
@@ -196,19 +209,19 @@ extension MovieMaker.Record.ViewController.Model {
     /// Maximum countdown timer duration
     static let maxTimerDuration = 3
     
-    /// Is currently recording
+    /// Is currently recording (observable)
     var isRecording: Property<Bool> { return self.recordAction.isExecuting }
     
-    /// Is timer currently counting down
+    /// Is timer currently counting down (observable)
     var isCountingDown: Property<Bool> { return self.countdownAction.isExecuting }
     
-    /// Is currently either recording or counting down
+    /// Is currently either recording or counting down (observable)
     var isRecordingOrCountingDown: Property<Bool> { return self.countdownOrRecordAction.isExecuting }
     
-    /// Is currently selecting `Filter`
+    /// Is currently selecting `Filter` (observable)
     var isSelectingFilter: Property<Bool> { return self.filterSelectAction.isExecuting }
     
-    /// Current countdown timer duration
+    /// Current countdown timer duration (observable)
     var countdownTimerDuration: Property<Int> {
         return Property(initial: MovieMaker.Record.ViewController.Model.maxTimerDuration, then: self.countdownAction.values)
     }
@@ -233,7 +246,6 @@ private extension MovieMaker.Record.ViewController.Model {
             guard let `self` = self else { return }
             
             let camera = `self`.camera.value
-            
             camera.removeAllTargets()
             previous?.removeAllTargets()
             
@@ -244,11 +256,8 @@ private extension MovieMaker.Record.ViewController.Model {
         // Switch `Camera`
         disposable += self.camera.producer.optionalize().combinePrevious(nil).startWithValues { [weak self] previous, current in
             guard let `self` = self else { return }
-            
-            sharedImageProcessingContext.runOperationSynchronously{
-                previous?.stopCapture()
-                previous?.removeAllTargets()
-            }
+
+            previous?.stopThenRemoveAllTargets()
             
             current!.addTarget(`self`.filter.value.operation)
             current!.startCapture()
@@ -264,10 +273,10 @@ private extension MovieMaker.Record.ViewController.Model {
     func debug() -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += self.isRecording.producer.startWithValues { print("isRecording \($0)") }
-        disposable += self.isCountingDown.producer.startWithValues { print("isCountingDown \($0)") }
-        disposable += self.recordAction.values.observeValues { print("recordingAction values \($0)") }
-        disposable += self.shape.producer.startWithValues { print("shape \($0)") }
+        //disposable += self.isRecording.producer.startWithValues { print("isRecording \($0)") }
+        //disposable += self.isCountingDown.producer.startWithValues { print("isCountingDown \($0)") }
+        //disposable += self.recordAction.values.observeValues { print("recordingAction values \($0)") }
+        //disposable += self.shape.producer.startWithValues { print("shape \($0)") }
         
         return disposable
     }
