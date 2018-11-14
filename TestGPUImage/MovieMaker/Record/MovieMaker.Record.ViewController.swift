@@ -21,15 +21,23 @@ extension MovieMaker.Record {
         /// `Model` for this `UIViewController`
         private let model: Model! = Model()
         
-        /// Interactive control elements
+        /// Interactive `CameraControl` elements
         private let cameraControl = CameraControl()
         
         /// Live preview
-        private let renderView: RenderView = {
+        private lazy var renderView: RenderView = {
             let renderView = RenderView()
             renderView.fillMode = .stretch
-            
+            renderView.layer.mask = self.mask
             return renderView
+        }()
+        
+        /// Mask used for square `Shape`
+        private lazy var mask: CALayer = {
+            let mask = CALayer()
+            mask.frame = self.view.bounds
+            mask.backgroundColor = UIColor.black.cgColor
+            return mask
         }()
     }
 }
@@ -42,10 +50,10 @@ extension MovieMaker.Record.ViewController {
 
         self.createLayout()
     }
-    
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-
+        
         guard self.model != nil else {
             let ac = UIAlertController(title: "Error", message: "Unable to initialize camera", preferredStyle: .alert)
             ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in
@@ -86,6 +94,7 @@ private extension MovieMaker.Record.ViewController {
         disposable += self.cameraControl.bind(model)
         
         disposable += self.orientation <~ model.orientation
+        disposable += self.shape <~ model.shape
         
         // Dismiss `UIViewController`
         disposable += model.dismissAction.values.observeValues { [weak self] _ in
@@ -100,11 +109,16 @@ private extension MovieMaker.Record.ViewController {
         return self.reactive.makeBindingTarget { `self`, value in `self`.renderView.orientation = value }
     }
     
+    /// `BindingTarget<Shape>` for managing adaptive `Shape`
+    var shape: BindingTarget<Shape> {
+        return self.reactive.makeBindingTarget { `self`, value in `self`.updateShape(value) }
+    }
+    
     /// Layout initialization
     func createLayout() {
         self.view.addSubview(self.renderView)
         self.view.addSubview(self.cameraControl)
-        
+
         self.updateLayout()
     }
     
@@ -112,5 +126,15 @@ private extension MovieMaker.Record.ViewController {
     func updateLayout() {
         self.renderView.snp.remakeConstraints { make in make.edges.equalToSuperview() }
         self.cameraControl.snp.remakeConstraints { make in make.edges.equalToSuperview() }
+    }
+
+    /// Update mask area corresponding to `Shape`
+    func updateShape(_ shape: Shape) {
+        let frame = self.view.bounds.applying(shape)
+        print(frame)
+        let (bounds, position) = frame.makeBoundsAndPosition()
+
+        self.mask.bounds = bounds
+        self.mask.position = position
     }
 }

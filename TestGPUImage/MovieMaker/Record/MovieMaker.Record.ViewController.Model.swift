@@ -93,7 +93,7 @@ extension MovieMaker.Record.ViewController {
         
         /// Current `Shape`
         lazy var shape: Property<Shape> = {
-            return Property(initial: .square, then: self.shapeChangeAction.values)
+            return Property(initial: .rectangle, then: self.shapeChangeAction.values)
         }()
         
         /// `Action` to switch `Shape` between square and rectangle
@@ -208,8 +208,6 @@ extension MovieMaker.Record.ViewController.Model {
     /// Is currently selecting `Filter`
     var isSelectingFilter: Property<Bool> { return self.filterSelectAction.isExecuting }
     
-
-    
     /// Current countdown timer duration
     var countdownTimerDuration: Property<Int> {
         return Property(initial: MovieMaker.Record.ViewController.Model.maxTimerDuration, then: self.countdownAction.values)
@@ -218,6 +216,7 @@ extension MovieMaker.Record.ViewController.Model {
 
 // Protocol
 extension MovieMaker.Record.ViewController.Model: MovieMaker.Filter.CollectionView.Delegate {
+    
     var filterBindingTarget: BindingTarget<MovieMaker.Filter> { return self.filter.bindingTarget }
 }
 

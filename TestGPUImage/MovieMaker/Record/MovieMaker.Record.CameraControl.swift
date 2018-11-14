@@ -11,6 +11,7 @@ import UIKit
 import ReactiveCocoa
 import ReactiveSwift
 import GPUImage
+import KPlugin
 
 extension MovieMaker.Record {
     
@@ -98,10 +99,9 @@ extension MovieMaker.Record.CameraControl {
         let disposable = CompositeDisposable()
         
         disposable += model.filterBindingTarget <~ self.filterCollectionView.filter
-        disposable += self.filterCollectionView.orientationBindingTarget <~ model.orientation
-        disposable += self.orientation <~ model.orientation
+        disposable += [self.orientation, self.filterCollectionView.orientationBindingTarget] <~ model.orientation
         disposable += self.recordButton.bind(model)
-        disposable += self.shapeChangeButton.reactive.image(for: .normal) <~ model.shape.map { $0.swap().buttonImage }
+        disposable += self.shapeChangeButton.reactive.image(for: .normal) <~ model.shape.map { $0.swap().switchButtonImage }
         disposable += self.timeLabel.time <~ model.recordDuration
         disposable += self.countdownToggleButton.reactive.image(for: .normal) <~ model.isCountdownEnabled.map { $0 ? UIImage(named: "icoTimerOff")! : UIImage(named: "icoTimer")! }
         disposable += self.countdownLabel.reactive.isHidden <~ (!model.isCountdownEnabled || model.isRecording)

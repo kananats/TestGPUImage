@@ -27,18 +27,44 @@ public extension Shape {
         return .square
     }
     
-    /// Return an image used for `Shape` switching button
-    var buttonImage: UIImage {
+    /// Return a `UIImage` used for `Shape` switching button
+    var switchButtonImage: UIImage {
         if self == .square { return UIImage(named: "icoSquare")! }
         return UIImage(named: "icoSizeOff")!
     }
 }
 
+// Protocol
 extension Shape: CustomStringConvertible {
+    
     public var description: String {
         switch self {
         case .square:       return "Square"
         case .rectangle:    return "Rectangle"
         }
+    }
+}
+
+public extension CGRect {
+    
+    /// Applies a `Shape` to a rectangle.
+    func applying(_ shape: Shape) -> CGRect {
+        if shape == .rectangle { return self }
+        
+        let origin = CGPoint(x: 0, y: -30)
+        var size = self.size
+        
+        let min = Swift.min(size.width, size.height)
+        size.width = min
+        size.height = min
+        
+        return CGRect(origin: origin, size: size)
+    }
+    
+    /// Converts to `bounds` and `position`
+    func makeBoundsAndPosition() -> (bounds: CGRect, point: CGPoint) {
+        let bounds = CGRect(x: 0, y: 0, width: self.width, height: self.height)
+        let point = CGPoint(x: self.width / 2 - self.origin.x, y: self.height / 2 - self.origin.y)
+        return (bounds, point)
     }
 }
