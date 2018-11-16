@@ -30,7 +30,7 @@ public extension Reactive where Base == AVPlayerItem {
     
     /// The current `CMTime` of the `AVPlayerItem` (observable)
     var currentTime: SignalProducer<CMTime, NoError> {
-        return SignalProducer.stopwatch(interval: .milliseconds(16)).take(duringLifetimeOf: self.base).map { _ in self.base.currentTime() }
+        return SignalProducer.stopwatch(interval: .milliseconds(16)).take(duringLifetimeOf: self.base).map { _ in self.base.currentTime() }.skipRepeats()
     }
     
     /// A `Bool` value that indicates whether the `AVPlayerItem` will likely play through without stalling (observable)
@@ -43,9 +43,14 @@ public extension Reactive where Base == AVPlayerItem {
         return self.producer(forKeyPath: #keyPath(AVPlayerItem.isPlaybackBufferFull)).take(duringLifetimeOf: self.base).map { $0 as! Bool }
     }
     
-    /// The `AVPlayerItem.Status` of the player item (observable)
+    /// The `AVPlayerItem.Status` of the `AVPlayerItem` (observable)
     var status: SignalProducer<AVPlayerItem.Status, NoError> {
         return self.producer(forKeyPath: #keyPath(AVPlayerItem.status)).take(duringLifetimeOf: self.base).map { AVPlayerItem.Status(rawValue: $0 as! Int)! }
+    }
+    
+    /// A `Bool` value that indicates whether the `AVPlayerItem` is ready to play (observable)
+    var readyToPlay: SignalProducer<Bool, NoError> {
+        return (self.status.map { $0 == .readyToPlay } || self.isPlaybackLikelyToKeepUp || self.isPlaybackBufferFull).skipRepeats()
     }
 }
 

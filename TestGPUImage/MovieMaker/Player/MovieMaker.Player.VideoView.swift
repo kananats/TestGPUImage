@@ -27,12 +27,6 @@ public extension MovieMaker.Player {
             return button
         }()
         
-        private lazy var jumpButton: UIButton = {
-            let button = UIButton()
-            button.setTitle("Jump", for: .normal)
-            return button
-        }()
-        
         override init(frame: CGRect = .zero) {
             super.init(frame: frame)
             
@@ -99,16 +93,10 @@ private extension MovieMaker.Player.VideoView {
     /// Update constraints
     func updateLayout() {
         self.playerLayer.frame = self.bounds
-        self.playerLayer.backgroundColor = UIColor.green.cgColor
         self.playerLayer.videoGravity = .resizeAspectFill
         
         self.playButton.snp.makeConstraints { make in
             make.centerX.centerY.equalToSuperview()
-            make.width.height.equalTo(50)
-        }
-        
-        self.jumpButton.snp.makeConstraints { make in
-            make.centerX.centerY.equalToSuperview().offset(100)
             make.width.height.equalTo(50)
         }
     }
