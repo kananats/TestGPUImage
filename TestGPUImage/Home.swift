@@ -15,7 +15,7 @@ final class Home: UIViewController {
         let button = UIButton()
         button.setTitle("Start", for: .normal)
         button.addTarget { [weak self] _ in
-            let vc = MovieMaker.Canvas.ViewController()
+            let vc = MovieMaker.ViewController()
             self?.present(vc, animated: true)
         }
         

@@ -96,8 +96,8 @@ private extension MovieMaker.Filter.CollectionView.Cell {
         self.indicator.snp.remakeConstraints { make in
             make.width.equalTo(3)
             make.height.equalTo(MovieMaker.Filter.CollectionView.filterSize.height)
-            make.left.equalTo(self)
-            make.centerY.equalTo(self)
+            make.left.equalToSuperview()
+            make.centerY.equalToSuperview()
         }
         
         self.preview.snp.remakeConstraints { make in
@@ -112,8 +112,8 @@ private extension MovieMaker.Filter.CollectionView.Cell {
         self.indicator.snp.remakeConstraints { make in
             make.width.equalTo(MovieMaker.Filter.CollectionView.filterSize.width)
             make.height.equalTo(3)
-            make.centerX.equalTo(self)
-            make.top.equalTo(self)
+            make.centerX.equalToSuperview()
+            make.top.equalToSuperview()
         }
         
         self.preview.snp.remakeConstraints { make in

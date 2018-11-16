@@ -67,14 +67,14 @@ private extension MovieMaker.Record.TimeLabel {
     /// Update constraints
     func updateLayout() {
         self.imageView.snp.remakeConstraints { make in
-            make.left.equalTo(self).offset(14)
-            make.centerY.equalTo(self)
+            make.left.equalToSuperview().offset(14)
+            make.centerY.equalToSuperview()
         }
         
         self.label.snp.remakeConstraints { make in
-            make.left.equalTo(self).offset(34)
-            make.right.lessThanOrEqualTo(self)
-            make.centerY.equalTo(self)
+            make.left.equalToSuperview().offset(34)
+            make.right.equalToSuperview()
+            make.centerY.equalToSuperview()
         }
     }
 }

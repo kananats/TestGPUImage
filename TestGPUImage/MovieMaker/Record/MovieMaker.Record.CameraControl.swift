@@ -149,12 +149,12 @@ private extension MovieMaker.Record.CameraControl {
         self.timeLabel.snp.remakeConstraints { make in
             make.width.equalTo(136)
             make.height.equalTo(44)
-            make.centerX.equalTo(self)
+            make.centerX.equalToSuperview()
             make.centerY.equalTo(self.safeAreaLayoutGuide.snp.top).offset(20)
         }
         
         self.countdownLabel.snp.remakeConstraints { make in
-            make.centerX.centerY.equalTo(self)
+            make.centerX.centerY.equalToSuperview()
         }
         
         self.dismissButton.snp.remakeConstraints { make in
@@ -168,8 +168,8 @@ private extension MovieMaker.Record.CameraControl {
     func updatePortraitLayout() {
         self.recordButton.snp.remakeConstraints { make in
             make.width.height.equalTo(81)
-            make.bottom.equalTo(self).offset(-40)
-            make.centerX.equalTo(self)
+            make.bottom.equalToSuperview().offset(-40)
+            make.centerX.equalToSuperview()
         }
         
         self.cameraSwitchButton.snp.remakeConstraints { make in
@@ -197,9 +197,9 @@ private extension MovieMaker.Record.CameraControl {
         }
         
         self.filterCollectionView.snp.remakeConstraints { make in
-            make.width.equalTo(self)
+            make.width.equalToSuperview()
             make.height.equalTo(MovieMaker.Filter.CollectionView.filterSize.height + 5)
-            make.centerX.equalTo(self)
+            make.centerX.equalToSuperview()
             make.bottom.equalTo(self.recordButton.snp.top).offset(-16)
         }
     }
@@ -208,8 +208,8 @@ private extension MovieMaker.Record.CameraControl {
     func updateLandscapeLayout() {
         self.recordButton.snp.remakeConstraints { make in
             make.width.height.equalTo(81)
-            make.right.equalTo(self).offset(-6)
-            make.centerY.equalTo(self)
+            make.right.equalToSuperview().offset(-6)
+            make.centerY.equalToSuperview()
         }
         
         self.cameraSwitchButton.snp.remakeConstraints { make in
@@ -238,9 +238,9 @@ private extension MovieMaker.Record.CameraControl {
         
         self.filterCollectionView.snp.remakeConstraints { make in
             make.width.equalTo(MovieMaker.Filter.CollectionView.filterSize.width + 5)
-            make.height.equalTo(self)
+            make.height.equalToSuperview()
             make.right.equalTo(self.recordButton.snp.left).offset(-20)
-            make.centerY.equalTo(self)
+            make.centerY.equalToSuperview()
         }
     }
 }
