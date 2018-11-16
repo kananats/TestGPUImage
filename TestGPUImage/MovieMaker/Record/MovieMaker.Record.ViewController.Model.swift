@@ -70,7 +70,7 @@ extension MovieMaker.Record.ViewController {
             }
         }()
         
-        /// `Action` to start countdown timer
+        /// An `Action` to start countdown timer
         private lazy var countdownAction: Action<Int, Int, NoError> = {
             return Action { [weak self] input in
                 guard let `self` = self, input > 0 else { return .empty }
@@ -269,7 +269,7 @@ private extension MovieMaker.Record.ViewController.Model {
         return disposable
     }
     
-    /// Method for debug purpose
+    /// For debug
     func debug() -> Disposable {
         let disposable = CompositeDisposable()
         

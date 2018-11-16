@@ -6,7 +6,7 @@
 //  Copyright © 2018 s.kananat. All rights reserved.
 //
 
-extension MovieMaker {
+public extension MovieMaker {
     
     /// Namespace `MovieMaker.Record`
     final class Record { private init() { } }

@@ -123,7 +123,7 @@ private extension MovieMaker.Record.ViewController {
         self.cameraControl.snp.remakeConstraints { make in make.edges.equalToSuperview() }
     }
 
-    /// Update constraints to corresponding `ImageOrientation` and `Shape`
+    /// Update constraints to fit corresponding `ImageOrientation` and `Shape`
     func updateLayout(orientation: ImageOrientation, shape: Shape) {
         self.renderView.orientation = orientation
 

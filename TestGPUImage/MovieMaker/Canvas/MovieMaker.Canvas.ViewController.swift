@@ -6,7 +6,6 @@
 //  Copyright © 2018 s.kananat. All rights reserved.
 //
 
-import Foundation
 import ReactiveSwift
 import UIKit
 
@@ -27,22 +26,20 @@ extension MovieMaker.Canvas {
             return button
         }()
         
-        // Temporary
-        func test() {
-            
-        }
+        let videoView = MovieMaker.Player.VideoView()
     }
 }
 
 // Inheritance
-internal extension MovieMaker.Canvas.ViewController {
+public extension MovieMaker.Canvas.ViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
         self.createLayout()
         
-        self.test()
+        //let a = MutableProperty<URL>(URL(string: "http://techslides.com/demos/sample-videos/small.mp4")!)
+        //self.videoView.url <~ a
     }
 }
 
@@ -51,15 +48,16 @@ private extension MovieMaker.Canvas.ViewController {
     
     /// Layout initialization
     func createLayout() {
-        self.view.addSubview(self.button)
+        //self.view.addSubview(self.button)
+        self.view.addSubview(self.videoView)
         
-        self.button.snp.makeConstraints { make in
-            make.centerX.centerY.equalToSuperview()
-        }
+        self.updateLayout()
     }
     
     /// Update constraints
     func updateLayout() {
-        
+        self.videoView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
     }
 }
