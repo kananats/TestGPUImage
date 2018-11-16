@@ -8,8 +8,8 @@
 
 import Foundation
 import UIKit
-import ReactiveCocoa
 import ReactiveSwift
+import ReactiveCocoa
 import GPUImage
 import KPlugin
 
@@ -168,31 +168,31 @@ private extension MovieMaker.Record.CameraControl {
     func updatePortraitLayout() {
         self.recordButton.snp.remakeConstraints { make in
             make.width.height.equalTo(81)
-            make.bottom.equalToSuperview().offset(-40)
-            make.centerX.equalToSuperview()
+            make.bottom.equalTo(self).offset(-40)
+            make.centerX.equalTo(self)
         }
         
         self.cameraSwitchButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
-            make.left.equalTo(self.snp.right).multipliedBy(74.0 / 375.0)
+            make.centerX.equalTo(self.snp.right).multipliedBy(0.11)
             make.centerY.equalTo(self.recordButton)
         }
         
         self.shapeChangeButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
-            make.left.equalTo(self.snp.right).multipliedBy(18.0 / 375.0)
+            make.centerX.equalTo(self.snp.right).multipliedBy(0.27)
             make.centerY.equalTo(self.recordButton)
         }
         
         self.countdownToggleButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
-            make.left.equalTo(self.snp.right).multipliedBy(261.0 / 375.0)
+            make.centerX.equalTo(self.snp.right).multipliedBy(0.73)
             make.centerY.equalTo(self.recordButton)
         }
         
         self.filterCollectionViewToggleButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
-            make.left.equalTo(self.snp.right).multipliedBy(317.0 / 375.0)
+            make.centerX.equalTo(self.snp.right).multipliedBy(0.89)
             make.centerY.equalTo(self.recordButton)
         }
         
@@ -208,32 +208,32 @@ private extension MovieMaker.Record.CameraControl {
     func updateLandscapeLayout() {
         self.recordButton.snp.remakeConstraints { make in
             make.width.height.equalTo(81)
-            make.right.equalToSuperview().offset(-6)
-            make.centerY.equalToSuperview()
+            make.right.equalTo(self).offset(-6)
+            make.centerY.equalTo(self)
         }
         
         self.cameraSwitchButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
-            make.top.equalTo(self.snp.bottom).multipliedBy(261.0 / 375.0)
             make.centerX.equalTo(self.recordButton)
+            make.centerY.equalTo(self.snp.bottom).multipliedBy(0.89)
         }
         
         self.shapeChangeButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
-            make.top.equalTo(self.snp.bottom).multipliedBy(317.0 / 375.0)
             make.centerX.equalTo(self.recordButton)
+            make.centerY.equalTo(self.snp.bottom).multipliedBy(0.73)
         }
         
         self.countdownToggleButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
-            make.top.equalTo(self.snp.bottom).multipliedBy(74.0 / 375.0)
             make.centerX.equalTo(self.recordButton)
+            make.centerY.equalTo(self.snp.bottom).multipliedBy(0.27)
         }
         
         self.filterCollectionViewToggleButton.snp.remakeConstraints { make in
             make.width.height.equalTo(40)
             make.centerX.equalTo(self.recordButton)
-            make.top.equalTo(self.snp.bottom).multipliedBy(18.0 / 375.0)
+            make.centerY.equalTo(self.snp.bottom).multipliedBy(0.11)
         }
         
         self.filterCollectionView.snp.remakeConstraints { make in

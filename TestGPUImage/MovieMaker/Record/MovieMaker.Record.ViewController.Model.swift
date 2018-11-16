@@ -109,7 +109,7 @@ extension MovieMaker.Record.ViewController {
         
         /// `Action` to switch `Shape` between square and rectangle
         lazy var shapeChangeAction: Action<Void, Shape, NoError> = {
-            return Action(enabledIf: !self.isRecordingOrCountingDown) { [weak self] in
+            return Action(enabledIf: !self.isRecordingOrCountingDown && self.orientation.map { $0.isPortrait }) { [weak self] in
                 guard let `self` = self else { return .empty }
                 
                 let value = `self`.userSelectedShape.value.swap()
