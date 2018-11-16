@@ -42,13 +42,8 @@ public extension MovieMaker.Player {
     
         func prepareToPlay() {
             let url = URL(string: "https://wolverine.raywenderlich.com/content/ios/tutorials/video_streaming/foxVillage.m3u8")!
-            let asset = AVAsset(url: url)
             
-            let assetKeys = ["playable", "hasProtectedContent"]
-            let playerItem = AVPlayerItem(asset: asset, automaticallyLoadedAssetKeys: assetKeys)
-            
-            //self.model.
-            self.model.playerItem.swap(playerItem)
+            self.model.play(url: url)
         }
     }
 }

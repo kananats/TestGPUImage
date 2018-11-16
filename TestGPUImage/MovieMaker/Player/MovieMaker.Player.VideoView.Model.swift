@@ -20,7 +20,7 @@ internal extension MovieMaker.Player.VideoView {
         let player = AVPlayer()
         
         /// The current `AVPlayerItem?` (observable)
-        let playerItem = MutableProperty<AVPlayerItem?>(nil)
+        private let playerItem = MutableProperty<AVPlayerItem?>(nil)
         
         /// A `Bool` indicating whether the `AVPlayerItem` would be played automatically when `readyToPlay` is `true`
         var playImmediately: Bool
@@ -54,16 +54,15 @@ internal extension MovieMaker.Player.VideoView {
                 return SignalProducer { subscriber, lifetime in
                     `self`.play()
                     
-                     // When `AVPlayerItem` played to its end time, restarts if `loop`, terminates otherwise
+                    // When `AVPlayerItem` played to its end time, restarts if `loop`, terminates otherwise
                     lifetime += `self`.didPlayToEndTime.observeValues {
- 
+                        `self`.finishedPlaying = true
+                        
                         if `self`.loop {
-                            `self`.player.seek(to: .zero)
                             `self`.play()
                             return
                         }
                         
-                        `self`.finishedPlaying = true
                         subscriber.sendCompleted()
                     }
                     
@@ -78,6 +77,15 @@ internal extension MovieMaker.Player.VideoView {
             self.loop = loop
             
             self.bind()
+        }
+        
+        func play(url: URL) {
+            let asset = AVAsset(url: url)
+            
+            let assetKeys = ["playable", "hasProtectedContent"]
+            let playerItem = AVPlayerItem(asset: asset, automaticallyLoadedAssetKeys: assetKeys)
+            
+            self.playerItem.swap(playerItem)
         }
     }
 }
@@ -97,6 +105,8 @@ private extension MovieMaker.Player.VideoView.Model {
     /// Begins playback of `AVPlayerItem`
     func play() {
         guard self.readyToPlay.value else { fatalError("`play()` cannot be called while `readyToPlay` is `false`") }
+        
+        if `self`.finishedPlaying { `self`.player.seek(to: .zero) }
         
         self.player.play()
     }
