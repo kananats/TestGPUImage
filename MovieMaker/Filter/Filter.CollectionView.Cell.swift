@@ -12,6 +12,7 @@ import ReactiveCocoa
 import SnapKit
 import GPUImage
 
+// MARK: Main
 extension Filter.CollectionView {
     
     /// `Cell` used in `Filter.CollectionView`
@@ -36,19 +37,37 @@ extension Filter.CollectionView {
             return label
         }()
         
-        override init(frame: CGRect = .zero) {
-            super.init(frame: frame)
-
-            self.createLayout()
-        }
+        /// One-time layout initialization
+        private lazy var makeLayout: () = {
+            self.contentView.addSubview(self.indicator)
+            self.contentView.addSubview(self.preview)
+            self.contentView.addSubview(self.name)
+        }()
         
-        required init?(coder aDecoder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
+        override init(frame: CGRect = .zero) { super.init(frame: frame) }
+        
+        required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     }
 }
 
-// Public
+// MARK: Inheritance
+extension Filter.CollectionView.Cell {
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        _ = self.makeLayout
+        
+        self.updateLayout(orientation: .portrait)
+    }
+}
+
+// MARK: Protocol
+extension Filter.CollectionView.Cell: Reusable {
+    static let reuseIdentifier = "MovieMakerFilterCollectionViewCell"
+}
+
+// MARK: Internal
 extension Filter.CollectionView.Cell {
     
     /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
@@ -63,24 +82,10 @@ extension Filter.CollectionView.Cell {
     }
 }
 
-// Protocol
-extension Filter.CollectionView.Cell: Reusable {
-    static let reuseIdentifier = "MovieMakerFilterCollectionViewCell"
-}
-
-// Private
+// MARK: Private
 private extension Filter.CollectionView.Cell {
     
-    /// Layout initialization
-    func createLayout() {
-        self.contentView.addSubview(self.indicator)
-        self.contentView.addSubview(self.preview)
-        self.contentView.addSubview(self.name)
-        
-        self.updateLayout(orientation: .portrait)
-    }
-    
-    /// Update constraints to fit corresponding `ImageOrientation`
+    /// Update layout constraints to fit corresponding `ImageOrientation`
     func updateLayout(orientation: ImageOrientation) {
         if orientation.isPortrait { self.updatePortraitLayout() }
         else { self.updateLandscapeLayout() }
@@ -124,7 +129,7 @@ private extension Filter.CollectionView.Cell {
     }
 }
 
-// Extension
+// MARK: Extension
 extension Reactive where Base: Filter.CollectionView.Cell {
     
     /// `BindingTarget<Bool>` indicating whether `self` is selected

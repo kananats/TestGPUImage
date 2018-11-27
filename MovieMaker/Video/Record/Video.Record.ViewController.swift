@@ -6,20 +6,21 @@
 //  Copyright © 2018 s.kananat. All rights reserved.
 //
 
-import CoreMedia
 import UIKit
+import CoreMedia
 import ReactiveSwift
 import ReactiveCocoa
 import GPUImage
 import SnapKit
 
+// MARK: Main
 extension Video.Record {
     
     /// `UIViewController` for recording
     final class ViewController: UIViewController {
         
         /// `Model` for this `UIViewController`
-        private let model: Model! = Model()
+        let model: Model! = Model()
         
         /// Interactive `CameraControl` elements
         private let cameraControl = CameraControl()
@@ -32,27 +33,36 @@ extension Video.Record {
             return renderView
         }()
         
-        /// Mask used for square `Shape`
+        /// Mask used for square `Video.Shape`
         private lazy var mask: CALayer = {
             let mask = CALayer()
             mask.frame = self.view.bounds
-            mask.backgroundColor = UIColor.black.cgColor
+            mask.backgroundColor = .black
             return mask
+        }()
+        
+        
+        /// One-time layout initialization
+        private lazy var makeLayout: () = {
+            self.view.addSubview(self.renderView)
+            self.view.addSubview(self.cameraControl)
+            
+            guard self.model != nil else { return }
+            
+            self.bind(with: self.model)
         }()
     }
 }
 
-// Inheritance
+// MARK: Inheritance
 extension Video.Record.ViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        guard self.model != nil else { return }
+        _ = self.makeLayout
         
-        self.bind(with: self.model)
-        
-        self.createLayout()
+        self.updateLayout()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -85,7 +95,10 @@ extension Video.Record.ViewController {
     }
 }
 
-// Private
+// MARK: Protocol
+extension Video.Record.ViewController: Canvas.ViewController.Navigable { }
+
+// MARK: Private
 private extension Video.Record.ViewController {
     
     /// Bind with `Video.Record.ViewController.Model`
@@ -95,14 +108,11 @@ private extension Video.Record.ViewController {
         
         disposable += self.cameraControl.bind(with: model)
 
-        disposable += Property.combineLatest(model.orientation, model.shape).producer.startWithValues { [weak self] orientation, shape in
-            guard let `self` = self else { return }
-            
-            `self`.updateLayout(orientation: orientation, shape: shape)
-        }
+        // Update layout constraints to fit corresponding `ImageOrientation` and `Video.Shape`
+        disposable += self.orientationAndShape <~ Property.combineLatest(model.orientation, model.shape)
         
         // Dismiss `UIViewController`
-        disposable += model.dismissAction.values.observeValues { [weak self] _ in
+        disposable += model.dismissAction.values.observe(on: UIScheduler()).observeValues { [weak self] _ in
             guard let `self` = self else { return }
 
             `self`.dismiss(animated: true)
@@ -111,21 +121,21 @@ private extension Video.Record.ViewController {
         return disposable
     }
     
-    /// Layout initialization
-    func createLayout() {
-        self.view.addSubview(self.renderView)
-        self.view.addSubview(self.cameraControl)
-
-        self.updateLayout()
+    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation` and `Video.Shape`
+    var orientationAndShape: BindingTarget<(ImageOrientation, Video.Shape)> {
+        return self.reactive.makeBindingTarget { `self`, value in
+            let (orientation, shape) = value
+            `self`.updateLayout(orientation: orientation, shape: shape)
+        }
     }
     
-    /// Update constraints
+    /// Update layout constraints
     func updateLayout() {
         self.renderView.snp.remakeConstraints { make in make.edges.equalToSuperview() }
         self.cameraControl.snp.remakeConstraints { make in make.edges.equalToSuperview() }
     }
 
-    /// Update constraints to fit corresponding `ImageOrientation` and `Video.Shape`
+    /// Update layout constraints to fit corresponding `ImageOrientation` and `Video.Shape`
     func updateLayout(orientation: ImageOrientation, shape: Video.Shape) {
         self.renderView.orientation = orientation
 

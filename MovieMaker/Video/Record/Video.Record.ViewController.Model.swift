@@ -13,6 +13,7 @@ import ReactiveCocoa
 import GPUImage
 import KPlugin
 
+// MARK: Main
 extension Video.Record.ViewController {
     
     /// `Model` to be binded with `Video.Record.ViewController`
@@ -31,7 +32,7 @@ extension Video.Record.ViewController {
         /// Calling this variable directly may lead to undefined behavior.
         private var movieOutput: MovieOutput!
         
-        /// `URL` of the exported movie file.
+        /// `URL` of the recorded video file
         /// Calling this variable directly may lead to undefined behavior.
         private var fileURL: URL!
         
@@ -64,7 +65,7 @@ extension Video.Record.ViewController {
                     if `self`.isCountdownEnabled.value { timerDuration = Video.Record.maxTimerDuration }
                     
                     lifetime += `self`.countdownAction.apply(timerDuration).startWithCompleted {
-                        lifetime += `self`.recordAction.apply().start()
+                        `self`.recordAction.apply().start()
                     }
                 }
             }
@@ -107,7 +108,7 @@ extension Video.Record.ViewController {
             return Property(initial: .rectangle, then: self.shapeChangeAction.values)
         }()
         
-        /// `Action` to switch `Shape` between square and rectangle
+        /// `Action` to switch `Video.Shape` between square and rectangle
         lazy var shapeChangeAction: Action<Void, Video.Shape, NoError> = {
             return Action(enabledIf: !self.isRecordingOrCountingDown && self.orientation.map { $0.isPortrait }) { [weak self] in
                 guard let `self` = self else { return .empty }
@@ -136,7 +137,7 @@ extension Video.Record.ViewController {
         }()
         
         /// Main `Action` for recording
-        private lazy var recordAction: Action<Void, URL, NSError> = {
+        lazy var recordAction: Action<Void, URL, NSError> = {
             return Action { [weak self] in
                 guard let `self` = self else { return .empty }
 
@@ -152,9 +153,11 @@ extension Video.Record.ViewController {
                     
                     lifetime += `self`.recordDuration <~ SignalProducer.stopwatch(interval: .milliseconds(16))
                     
-                    lifetime += `self`.countdownOrRecordToggleAction.values.filter { !$0 } .observeValues { _ in
-                        let fileURL = `self`.stopRecording()
-                        subscriber.send(value: fileURL)
+                    lifetime += `self`.countdownOrRecordToggleAction.values.filter { !$0 }.map { _ in () }.observeValues {
+                        `self`.stopRecording() { value in
+                            subscriber.send(value: value)
+                            subscriber.sendCompleted()
+                        }
                     }
                 }
             }
@@ -203,8 +206,14 @@ extension Video.Record.ViewController {
     }
 }
 
-// Public
-extension Video.Record.ViewController.Model {
+// MARK: Protocol
+extension Video.Record.ViewController.Model: Filter.CollectionView.Delegate {
+    
+    var filterBindingTarget: BindingTarget<Filter> { return self.filter.bindingTarget }
+}
+
+// MARK: Internal
+internal extension Video.Record.ViewController.Model {
 
     /// Is currently recording (observable)
     var isRecording: Property<Bool> { return self.recordAction.isExecuting }
@@ -224,13 +233,7 @@ extension Video.Record.ViewController.Model {
     }
 }
 
-// Protocol
-extension Video.Record.ViewController.Model: Filter.CollectionView.Delegate {
-    
-    var filterBindingTarget: BindingTarget<Filter> { return self.filter.bindingTarget }
-}
-
-// Private
+// MARK: Private
 private extension Video.Record.ViewController.Model {
 
     /// Bind
@@ -260,24 +263,19 @@ private extension Video.Record.ViewController.Model {
             current!.startCapture()
         }
     
+        // Record completion
+        disposable += self.recordAction.completed.observeValues { [weak self] in
+            guard let `self` = self else { return }
+            
+            `self`.dismissAction.apply().start()
+        }
+        
         // Debug purpose
         disposable += self.debug()
         
         return disposable
     }
-    
-    /// For debug
-    func debug() -> Disposable {
-        let disposable = CompositeDisposable()
-        
-        //disposable += self.isRecording.producer.startWithValues { print("isRecording \($0)") }
-        //disposable += self.isCountingDown.producer.startWithValues { print("isCountingDown \($0)") }
-        //disposable += self.recordAction.values.observeValues { print("recordingAction values \($0)") }
-        //disposable += self.shape.producer.startWithValues { print("shape \($0)") }
-        
-        return disposable
-    }
-    
+
     /// Implementation of start recording
     func startRecording(fileURL: URL) throws {
         guard self.fileURL == nil else {
@@ -296,7 +294,7 @@ private extension Video.Record.ViewController.Model {
     }
     
     /// Implementation of stop recording
-    func stopRecording() -> URL {
+    func stopRecording(callback: @escaping (URL) -> () = { _ in }) {
         guard let fileURL = self.fileURL else {
             fatalError("Unable to execute `stopRecording()` while `startRecording()` has not been called yet.")
         }
@@ -304,10 +302,22 @@ private extension Video.Record.ViewController.Model {
         self.movieOutput!.finishRecording {
             self.camera.value.audioEncodingTarget = nil
             self.movieOutput = nil
-            
+
             self.fileURL = nil
+            
+            callback(fileURL)
         }
+    }
+    
+    /// For debug
+    func debug() -> Disposable {
+        let disposable = CompositeDisposable()
         
-        return fileURL
+        //disposable += self.isRecording.producer.startWithValues { print("isRecording \($0)") }
+        //disposable += self.isCountingDown.producer.startWithValues { print("isCountingDown \($0)") }
+        //disposable += self.recordAction.values.observeValues { print("recordingAction values \($0)") }
+        //disposable += self.shape.producer.startWithValues { print("shape \($0)") }
+        
+        return disposable
     }
 }

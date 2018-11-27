@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 final class Home: UIViewController {
         
@@ -21,6 +22,11 @@ final class Home: UIViewController {
         
         return button
     }()
+    
+    /// One-time layout initialization
+    private lazy var makeLayout: () = {
+        self.view.addSubview(self.button)
+    }()
 }
 
 // Inheritance
@@ -29,20 +35,16 @@ extension Home {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.createLayout()
+        _ = self.makeLayout
+        
+        self.updateLayout()
     }
 }
 
 // Private
 extension Home {
     
-    /// Layout initialization
-    func createLayout() {
-        self.view.addSubview(self.button)
-        
-        self.updateLayout()
-    }
-    
+    /// Update layout constraints
     func updateLayout() {
         self.button.snp.makeConstraints { make in
             make.edges.equalToSuperview()

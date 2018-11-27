@@ -13,10 +13,14 @@ import ReactiveCocoa
 import GPUImage
 import KPlugin
 
+// MARK: Main
 extension Video.Record {
     
     /// `UIView` which consists of interactive elements for controlling `Video.Record.ViewController`
     final class CameraControl: UIView {
+        
+        /// Current `ImageOrientation` of `Camera` (observable)
+        private let orientation = MutableProperty<ImageOrientation>(.portrait)
         
         /// `UIButton` for start/ stop recording
         private let recordButton = CaptureButton()
@@ -78,20 +82,39 @@ extension Video.Record {
             return button
         }()
         
-        override init(frame: CGRect = .zero) {
-            super.init(frame: frame)
+        /// One-time layout initialization
+        private lazy var makeLayout: () = {
+            self.addSubview(self.recordButton)
+            self.addSubview(self.cameraSwitchButton)
+            self.addSubview(self.shapeChangeButton)
+            self.addSubview(self.timeLabel)
+            self.addSubview(self.countdownToggleButton)
+            self.addSubview(self.countdownLabel)
+            self.addSubview(self.filterCollectionViewToggleButton)
+            self.addSubview(self.filterCollectionView)
+            self.addSubview(self.dismissButton)
+            
+            self.bind()
+        }()
+        
+        override init(frame: CGRect = .zero) { super.init(frame: frame) }
 
-            self.createLayout()
-        }
-
-        required init?(coder aDecoder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
+        required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     }
 }
 
-// Public
+// MARK: Inheritance
 extension Video.Record.CameraControl {
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        _ = self.makeLayout
+    }
+}
+
+// MARK: Internal
+internal extension Video.Record.CameraControl {
     
     /// Bind with `Video.Record.ViewController.Model`
     @discardableResult
@@ -99,11 +122,11 @@ extension Video.Record.CameraControl {
         let disposable = CompositeDisposable()
         
         disposable += model.filterBindingTarget <~ self.filterCollectionView.filter
-        disposable += [self.orientation, self.filterCollectionView.orientationBindingTarget] <~ model.orientation
+        disposable += [self.orientation.bindingTarget, self.filterCollectionView.orientationBindingTarget] <~ model.orientation
         disposable += self.recordButton.bind(with: model)
         disposable += self.shapeChangeButton.reactive.image(for: .normal) <~ model.shape.map { $0.swap().switchButtonImage }
         disposable += self.timeLabel.time <~ model.recordDuration
-        disposable += self.countdownToggleButton.reactive.image(for: .normal) <~ model.isCountdownEnabled.map { $0 ? UIImage(named: "icoTimerOff")! : UIImage(named: "icoTimer")! }
+        disposable += self.countdownToggleButton.reactive.image(for: .normal) <~ model.isCountdownEnabled.map { $0 ? .icoTimerOff : .icoTimer }
         disposable += self.countdownLabel.reactive.isHidden <~ (!model.isCountdownEnabled || model.isRecording)
         disposable += self.countdownLabel.reactive.text <~ model.countdownTimerDuration.map { String($0) }
         disposable += self.filterCollectionView.reactive.isHidden <~ !model.isSelectingFilter
@@ -118,31 +141,25 @@ extension Video.Record.CameraControl {
     }
 }
 
-// Private
+// MARK: Private
 private extension Video.Record.CameraControl {
     
-    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
-    var orientation: BindingTarget<ImageOrientation> {
-        return self.reactive.makeBindingTarget { `self`, value in `self`.updateLayout(orientation: value) }
+    /// Bind
+    @discardableResult
+    func bind() -> Disposable {
+        let disposable = CompositeDisposable()
+        
+        disposable += self.orientation.producer.startWithValues { [weak self] value in
+            guard let `self` = self else { return }
+            
+            `self`.updateLayout(orientation: self.orientation.value)
+        }
+        
+        return disposable
     }
     
-    /// Layout initialization
-    func createLayout() {
-        self.addSubview(self.recordButton)
-        self.addSubview(self.cameraSwitchButton)
-        self.addSubview(self.shapeChangeButton)
-        self.addSubview(self.timeLabel)
-        self.addSubview(self.countdownToggleButton)
-        self.addSubview(self.countdownLabel)
-        self.addSubview(self.filterCollectionViewToggleButton)
-        self.addSubview(self.filterCollectionView)
-        self.addSubview(self.dismissButton)
-
-        self.updateLayout()
-    }
-    
-    /// Update constraints to fit corresponding `ImageOrientation`
-    func updateLayout(orientation: ImageOrientation = .portrait) {
+    /// Update layout constraints to fit corresponding `ImageOrientation`
+    func updateLayout(orientation: ImageOrientation) {
         if orientation.isPortrait { self.updatePortraitLayout() }
         else { self.updateLandscapeLayout() }
         
@@ -164,7 +181,7 @@ private extension Video.Record.CameraControl {
         }
     }
     
-    /// Portrait constraits
+    /// Update portrait layout constraints
     func updatePortraitLayout() {
         self.recordButton.snp.remakeConstraints { make in
             make.width.height.equalTo(81)
@@ -204,7 +221,7 @@ private extension Video.Record.CameraControl {
         }
     }
     
-    /// Landscape constraits
+    /// Update landscape layout constraints
     func updateLandscapeLayout() {
         self.recordButton.snp.remakeConstraints { make in
             make.width.height.equalTo(81)

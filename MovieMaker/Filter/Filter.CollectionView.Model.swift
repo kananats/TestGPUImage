@@ -10,6 +10,7 @@ import UIKit
 import ReactiveSwift
 import GPUImage
 
+// MARK: Main
 extension Filter.CollectionView {
     
     /// `Model` to be binded with `Filter.CollectionView`
@@ -26,8 +27,8 @@ extension Filter.CollectionView {
     }
 }
 
-// Public
-extension Filter.CollectionView.Model {
+// MARK: Internal
+internal extension Filter.CollectionView.Model {
     
     /// Current applied `Filter` (observable)
     var filter: Property<Filter> {

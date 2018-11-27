@@ -13,90 +13,102 @@ import ReactiveSwift
 import GPUImage
 import KPlugin
 
-public extension Signal.Observer where Error == NoError {
+public extension Double {
     
-    /// `Signal.Observer` as `BindingSource`
-    @discardableResult
-    static func <~ <Source: BindingSource> (provider: Signal.Observer, source: Source) -> Disposable? where Source.Value == Value, Source.Error == NoError {
-        return source.producer.startWithValues { value in provider.send(value: value) }
+    /// Rounds to decimal places value
+    func rounded(to places: Int) -> Double {
+        let divisor = pow(10.0, Double(places))
+        return (self * divisor).rounded() / divisor
     }
 }
 
-public extension Reactive where Base: AVPlayerItem {
+public extension CGFloat {
     
-    /// The `Notification` posted when the `AVPlayerItem` has played to its end time (observable)
-    var didPlayToEndTime: Signal<Notification, NoError> {
-        return NotificationCenter.default.reactive.notifications(forName: .AVPlayerItemDidPlayToEndTime, object: self.base).take(duringLifetimeOf: self.base)
-    }
-    
-    /// The current `CMTime` of the `AVPlayerItem` (observable)
-    var currentTime: SignalProducer<CMTime, NoError> {
-        return SignalProducer.stopwatch(interval: .milliseconds(16)).take(duringLifetimeOf: self.base).map { _ in self.base.currentTime() }.skipRepeats()
-    }
-    
-    /// A `Bool` value that indicates whether the `AVPlayerItem` will likely play through without stalling (observable)
-    var isPlaybackLikelyToKeepUp: SignalProducer<Bool, NoError> {
-        return self.producer(forKeyPath: #keyPath(AVPlayerItem.isPlaybackLikelyToKeepUp)).take(duringLifetimeOf: self.base).map { $0 as! Bool }
-    }
-    
-    /// A `Bool` value that indicates whether the internal media buffer is full and that further I/O is suspended (observable)
-    var isPlaybackBufferFull: SignalProducer<Bool, NoError> {
-        return self.producer(forKeyPath: #keyPath(AVPlayerItem.isPlaybackBufferFull)).take(duringLifetimeOf: self.base).map { $0 as! Bool }
-    }
-    
-    /// The `AVPlayerItem.Status` of the `AVPlayerItem` (observable)
-    var status: SignalProducer<AVPlayerItem.Status, NoError> {
-        return self.producer(forKeyPath: #keyPath(AVPlayerItem.status)).take(duringLifetimeOf: self.base).map { AVPlayerItem.Status(rawValue: $0 as! Int)! }
-    }
-    
-    /// A `Bool` value that indicates whether the `AVPlayerItem` is ready to play (observable)
-    var readyToPlay: SignalProducer<Bool, NoError> {
-        return (self.status.map { $0 == .readyToPlay } || self.isPlaybackLikelyToKeepUp || self.isPlaybackBufferFull).skipRepeats()
+    /// Rounds to decimal places value
+    func rounded(to places: Int) -> CGFloat {
+        let divisor = pow(10.0, CGFloat(places))
+        return (self * divisor).rounded() / divisor
     }
 }
 
-public extension Signal where Value == Bool {
-
-    /// Create a `Signal` that computes a logical NOT in the latest value
-    prefix static func ! (a: Signal) -> Signal { return a.negate() }
+extension CGRect {
     
-    /// Create a `Signal` that computes a logical OR between the latest values of two given signals.
-    static func || (lhs: Signal, rhs: Signal) -> Signal { return lhs.or(rhs) }
-    
-    /// Create a `Signal` that computes a logical AND between the latest values of two given signals.
-    static func && (lhs: Signal, rhs: Signal) -> Signal { return lhs.and(rhs) }
+    /// Converts to `CGRect` bounds and `CGPoint` position
+    func makeBoundsAndPosition() -> (bounds: CGRect, point: CGPoint) {
+        let bounds = CGRect(x: 0, y: 0, width: self.width, height: self.height)
+        let point = CGPoint(x: self.width / 2 - self.origin.x, y: self.height / 2 - self.origin.y)
+        return (bounds, point)
+    }
 }
 
-public extension SignalProducer where Value == Bool {
+public extension AVAsset {
     
-    /// Create a `SignalProducer` that computes a logical NOT in the latest value
-    prefix static func ! (a: SignalProducer) -> SignalProducer { return a.negate() }
-    
-    /// Create a `SignalProducer` that computes a logical OR between the latest values of two given producers.
-    static func || (lhs: SignalProducer, rhs: SignalProducer) -> SignalProducer { return lhs.or(rhs) }
-    
-    /// Create a `SignalProducer` that computes a logical AND between the latest values of two given producers.
-    static func && (lhs: SignalProducer, rhs: SignalProducer) -> SignalProducer { return lhs.and(rhs) }
+    static let test: AVAsset = {
+        let path = Bundle.main.path(forResource: "video", ofType:"m4v")!
+        let url = URL(fileURLWithPath: path)
+        let asset = AVAsset(url: url)
+        return asset
+    }()
 }
 
-public extension Camera {
+public extension Reactive where Base: UIScrollView {
     
-    /// Shorthand for executing `stopCapture()` then `removeAllTargets` on `sharedImageProcessingContext`
-    func stopThenRemoveAllTargets() {
-        sharedImageProcessingContext.runOperationSynchronously{
-            self.stopCapture()
-            self.removeAllTargets()
+    /// `BindingTarget<CGSize>` for managing `CGSize` of the content view
+    var contentSize: BindingTarget<CGSize> {
+        return self.makeBindingTarget { `self`, value in
+            `self`.contentSize = value
         }
     }
+    
+    /// The point at which the origin of the content view is offset from the origin of the scroll view (observable)
+    var contentOffset: SignalProducer<CGPoint, NoError> {
+        return self.producer(forKeyPath: #keyPath(UIScrollView.contentOffset)).take(duringLifetimeOf: self.base).map { $0 as! CGPoint }
+    }
+    
+    /// The point at which the origin of the content view is offset from the origin of the scroll view, normalized into 0 ... 1 scale (observable)
+    var normalizedContentOffset: SignalProducer<CGPoint, NoError> {
+        return self.contentOffset.filterMap { [weak base] value in
+            
+            guard let base = base else { return nil }
+            
+            var x = (value.x - base.minimumContentOffset.x) / (base.maximumContentOffset.x - base.minimumContentOffset.x)
+            var y = (value.y - base.minimumContentOffset.y) / (base.maximumContentOffset.y - base.minimumContentOffset.y)
+            
+            // Fix NaN
+            if x.isNaN || x < 0 { x = 0 }
+            if y.isNaN || y < 0 { y = 0 }
+            
+            // Fix round-off error
+            if x > 0.999 { x = 1 }
+            if y > 0.999 { y = 1 }
+            
+            return CGPoint(x: x, y: y)
+        }.skipRepeats()
+    }
+    
+    /// The point at which the origin of the content view is offset from the origin of the scroll view, clamped between minimum and maximum possible values (observable)
+    var clampedContentOffset: SignalProducer<CGPoint, NoError> {
+        return self.contentOffset.filterMap { [weak base] value in
+            
+            guard let base = base else { return nil }
+
+            let min = base.minimumContentOffset
+            let max = base.maximumContentOffset
+            
+            let x = value.x.clamped(to: min.x ... max.x )
+            let y = value.y.clamped(to: min.y ... max.y )
+        
+            return CGPoint(x: x, y: y)
+        }.skipRepeats()
+    }
 }
 
-extension AVPlayerItem.Status: CustomStringConvertible {
-    
-    public var description: String {
-        switch self {
-        case .unknown:      return "unknown"
-        case .readyToPlay:  return "readyToPlay"
-        case .failed:       return "failed"
-        }
-    }
+public extension UIImage {
+    static let icoTimer = UIImage(named: "icoTimer")!
+    static let icoTimerOff = UIImage(named: "icoTimerOff")!
+}
+
+public extension CGColor {
+    static let black = UIColor.black.cgColor
+    static let red = UIColor.red.cgColor
 }

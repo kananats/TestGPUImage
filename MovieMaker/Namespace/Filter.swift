@@ -9,6 +9,7 @@
 import UIKit
 import GPUImage
 
+// MARK: Main
 /// `Filter` to be applied with live `Camera`
 public final class Filter {
     
@@ -21,7 +22,7 @@ public final class Filter {
     /// Preview `Image`
     let preview: UIImage
     
-    /// Create a `Filter` with corresponding `ImageProcessingOperation` and `UIImage`
+    /// Creates a `Filter` with corresponding `ImageProcessingOperation` and `UIImage`
     private init<T: ImageProcessingOperation>(name: String, operation: T, preview: UIImage) {
         self.name = name
         self.operation = operation
@@ -29,7 +30,7 @@ public final class Filter {
     }
 }
 
-// Public
+// MARK: Public
 public extension Filter {
     
     /// `CGSize` of the `Filter` preview view
@@ -69,16 +70,16 @@ public extension Filter {
     static let purple = Filter(name: "Purple", image: UIImage(named: "purple.png")!)
 }
 
-// Private
+// MARK: Private
 private extension Filter {
     
-    /// Default `Filter` preview image
+    /// Default `Filter` preview `UIImage`
     static let preview = UIImage(named: "preview.png")!
     
-    /// Create no-operation `Filter`
+    /// Creates no-operation `Filter`
     static func createNoOperationFilter() -> GammaAdjustment { return GammaAdjustment() }
     
-    /// Create lookup `Filter` from `UIImage`
+    /// Creates lookup `Filter` from `UIImage`
     static func createLookupFilter(image: UIImage) -> OperationGroup {
         let operation = OperationGroup()
         
@@ -96,7 +97,7 @@ private extension Filter {
         return operation
     }
     
-    /// Create a `Filter` that performs no-operation
+    /// Creates a `Filter` that performs no-operation
     convenience init(name: String) {
         let operation = Filter.createNoOperationFilter()
         let preview = Filter.preview.filterWithOperation(Filter.createNoOperationFilter())
@@ -104,7 +105,7 @@ private extension Filter {
         self.init(name: name, operation: operation, preview: preview)
     }
     
-    /// Create a `Filter` with associated `UIImage` used for image processing.
+    /// Creates a `Filter` with associated `UIImage` used for image processing.
     convenience init(name: String, image: UIImage) {
         let operation = Filter.createLookupFilter(image: image)
         let preview = Filter.preview.filterWithOperation(Filter.createLookupFilter(image: image))

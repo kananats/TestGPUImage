@@ -11,6 +11,7 @@ import Result
 import ReactiveSwift
 import KPlugin
 
+// MARK: Main
 extension Video.Player {
     
     /// A `Model` to be binded with `Video.Player`
@@ -34,7 +35,7 @@ extension Video.Player {
         /// A `Bool` value that indicates whether the `AVPlayerItem` is ready to play (observable)
         let readyToPlay = MutableProperty<Bool>(false)
 
-        /// Pipe of `Signal<Void, NoError>` indicating whether the `AVPlayerItem` has played to its end time (observable)
+        /// A pipe of `Signal<Void, NoError>` indicating whether the `AVPlayerItem` has played to its end time (observable)
         private let didPlayToEndTimePipe = Signal<Void, NoError>.pipe()
 
         /// A `Bool` indicating whether the `AVPlayerItem` is finished playing
@@ -78,19 +79,10 @@ extension Video.Player {
             
             self.bind()
         }
-        
-        func play(url: URL) {
-            let asset = AVAsset(url: url)
-            
-            let assetKeys = ["playable", "hasProtectedContent"]
-            let playerItem = AVPlayerItem(asset: asset, automaticallyLoadedAssetKeys: assetKeys)
-            
-            self.playerItem.swap(playerItem)
-        }
     }
 }
 
-// Public
+// MARK: Internal
 extension Video.Player.Model {
     
     /// A `Signal<Void, NoError>` indicating whether `AVPlayerItem` has played to its end time (observable)
@@ -98,8 +90,21 @@ extension Video.Player.Model {
     
     /// A `Bool` indicating whether the `AVPlayerItem` is playing (observable)
     var playing: Property<Bool> { return self.playAction.isExecuting }
+    
+    /// A `BindingTarget` for managing received file
+    var fileURL: BindingTarget<URL> {
+        return self.playerItem.bindingTarget.transform { AVPlayerItem(url: $0) }
+    }
+    
+    /// Add video at `URL` to `AVPlayerItem`
+    func add(url: URL) {
+        let playerItem = AVPlayerItem(url: url)
+        
+        self.playerItem.swap(playerItem)
+    }
 }
 
+// MARK: Private
 private extension Video.Player.Model {
     
     /// Begins playback of `AVPlayerItem`
@@ -164,5 +169,17 @@ private extension Video.Player.Model {
         //disposable += self.currentTime.producer.startWithValues { print("readyToPlay", $0) }
 
         return disposable
+    }
+}
+
+// MARK: Extension
+fileprivate extension AVPlayerItem {
+    
+    /// Creates an `AVPlayerItem` from `URL`
+    convenience init(url: URL) {
+        let asset = AVAsset(url: url)
+        let assetKeys = ["playable", "hasProtectedContent"]
+        
+        self.init(asset: asset, automaticallyLoadedAssetKeys: assetKeys)
     }
 }

@@ -13,17 +13,24 @@
 		59156466219C0D12000F34AB /* Video.Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59156465219C0D12000F34AB /* Video.Player.swift */; };
 		59156469219C0F06000F34AB /* Video.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59156468219C0F06000F34AB /* Video.swift */; };
 		5915646B219C1852000F34AB /* Home.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5915646A219C1852000F34AB /* Home.swift */; };
+		5916C6FF21A4FA4000496748 /* Canvas.Timeline.Content.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5916C6FE21A4FA4000496748 /* Canvas.Timeline.Content.swift */; };
 		5917D10E21A24315002F5F6B /* Canvas.ViewController.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917D10D21A24315002F5F6B /* Canvas.ViewController.Model.swift */; };
 		5917D11421A2601D002F5F6B /* Canvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917D11321A2601D002F5F6B /* Canvas.swift */; };
+		5917D11621A282B4002F5F6B /* Canvas.ViewController.Navigable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5917D11521A282B4002F5F6B /* Canvas.ViewController.Navigable.swift */; };
 		5918A871219EB9B70090B324 /* Canvas.InsertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5918A870219EB9B70090B324 /* Canvas.InsertView.swift */; };
 		5918ACCE219D0D64000F5B30 /* Video.Player.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5918ACCD219D0D64000F5B30 /* Video.Player.Model.swift */; };
 		591ADC382193C5690021423A /* Reusable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 591ADC372193C5690021423A /* Reusable.swift */; };
 		591ADC3A2193E9F40021423A /* Filter.CollectionView.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 591ADC392193E9F40021423A /* Filter.CollectionView.Model.swift */; };
+		5922BE8221A3AA92004C507D /* Canvas.Timeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5922BE8121A3AA92004C507D /* Canvas.Timeline.swift */; };
+		5924B01321A64062008CC63A /* video.m4v in Resources */ = {isa = PBXBuildFile; fileRef = 5924B01221A64062008CC63A /* video.m4v */; };
+		5924B01521A6784C008CC63A /* Canvas.Timeline.Video.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5924B01421A6784C008CC63A /* Canvas.Timeline.Video.swift */; };
 		59269E7D2192966200098F72 /* Video.Record.TimeLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59269E7C2192966200098F72 /* Video.Record.TimeLabel.swift */; };
 		59269E7F2192DDE500098F72 /* Filter.CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59269E7E2192DDE500098F72 /* Filter.CollectionView.swift */; };
 		59269E822192DF4D00098F72 /* Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59269E812192DF4D00098F72 /* Filter.swift */; };
 		59269E842192E00300098F72 /* Filter.CollectionView.Delegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59269E832192E00300098F72 /* Filter.CollectionView.Delegate.swift */; };
 		59269E862192E5B700098F72 /* Filter.CollectionView.Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59269E852192E5B700098F72 /* Filter.CollectionView.Cell.swift */; };
+		592EC1E621A51C800047ADF6 /* Canvas.Timeline.Header.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592EC1E521A51C800047ADF6 /* Canvas.Timeline.Header.swift */; };
+		59391B1E21AB9A7600275081 /* Canvas.Timeline.Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59391B1D21AB9A7600275081 /* Canvas.Timeline.Model.swift */; };
 		599E922221995FE50035F1B2 /* Video.Shape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 599E922121995FE50035F1B2 /* Video.Shape.swift */; };
 		59BA28562186AB7E00FC9D65 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59BA28552186AB7E00FC9D65 /* AppDelegate.swift */; };
 		59BA28582186AB7E00FC9D65 /* Video.Record.ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59BA28572186AB7E00FC9D65 /* Video.Record.ViewController.swift */; };
@@ -63,17 +70,24 @@
 		59156465219C0D12000F34AB /* Video.Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Video.Player.swift; sourceTree = "<group>"; };
 		59156468219C0F06000F34AB /* Video.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Video.swift; sourceTree = "<group>"; };
 		5915646A219C1852000F34AB /* Home.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Home.swift; sourceTree = "<group>"; };
+		5916C6FE21A4FA4000496748 /* Canvas.Timeline.Content.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.Timeline.Content.swift; sourceTree = "<group>"; };
 		5917D10D21A24315002F5F6B /* Canvas.ViewController.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.ViewController.Model.swift; sourceTree = "<group>"; };
 		5917D11321A2601D002F5F6B /* Canvas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.swift; sourceTree = "<group>"; };
+		5917D11521A282B4002F5F6B /* Canvas.ViewController.Navigable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.ViewController.Navigable.swift; sourceTree = "<group>"; };
 		5918A870219EB9B70090B324 /* Canvas.InsertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.InsertView.swift; sourceTree = "<group>"; };
 		5918ACCD219D0D64000F5B30 /* Video.Player.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Video.Player.Model.swift; sourceTree = "<group>"; };
 		591ADC372193C5690021423A /* Reusable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reusable.swift; sourceTree = "<group>"; };
 		591ADC392193E9F40021423A /* Filter.CollectionView.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.CollectionView.Model.swift; sourceTree = "<group>"; };
+		5922BE8121A3AA92004C507D /* Canvas.Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.Timeline.swift; sourceTree = "<group>"; };
+		5924B01221A64062008CC63A /* video.m4v */ = {isa = PBXFileReference; lastKnownFileType = file; path = video.m4v; sourceTree = "<group>"; };
+		5924B01421A6784C008CC63A /* Canvas.Timeline.Video.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.Timeline.Video.swift; sourceTree = "<group>"; };
 		59269E7C2192966200098F72 /* Video.Record.TimeLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Video.Record.TimeLabel.swift; sourceTree = "<group>"; };
 		59269E7E2192DDE500098F72 /* Filter.CollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.CollectionView.swift; sourceTree = "<group>"; };
 		59269E812192DF4D00098F72 /* Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.swift; sourceTree = "<group>"; };
 		59269E832192E00300098F72 /* Filter.CollectionView.Delegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.CollectionView.Delegate.swift; sourceTree = "<group>"; };
 		59269E852192E5B700098F72 /* Filter.CollectionView.Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.CollectionView.Cell.swift; sourceTree = "<group>"; };
+		592EC1E521A51C800047ADF6 /* Canvas.Timeline.Header.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.Timeline.Header.swift; sourceTree = "<group>"; };
+		59391B1D21AB9A7600275081 /* Canvas.Timeline.Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Canvas.Timeline.Model.swift; sourceTree = "<group>"; };
 		599E922121995FE50035F1B2 /* Video.Shape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Video.Shape.swift; sourceTree = "<group>"; };
 		59BA28522186AB7E00FC9D65 /* MovieMaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MovieMaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		59BA28552186AB7E00FC9D65 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -124,10 +138,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5916C6FD21A4F58200496748 /* Timeline */ = {
+			isa = PBXGroup;
+			children = (
+				5922BE8121A3AA92004C507D /* Canvas.Timeline.swift */,
+				59391B1D21AB9A7600275081 /* Canvas.Timeline.Model.swift */,
+				5916C6FE21A4FA4000496748 /* Canvas.Timeline.Content.swift */,
+				592EC1E521A51C800047ADF6 /* Canvas.Timeline.Header.swift */,
+				5924B01421A6784C008CC63A /* Canvas.Timeline.Video.swift */,
+			);
+			path = Timeline;
+			sourceTree = "<group>";
+		};
 		5917D10F21A25D8D002F5F6B /* Video */ = {
 			isa = PBXGroup;
 			children = (
-				59156468219C0F06000F34AB /* Video.swift */,
 				599E922121995FE50035F1B2 /* Video.Shape.swift */,
 				5917D11221A25F38002F5F6B /* Player */,
 				5917D11021A25E78002F5F6B /* Record */,
@@ -138,7 +163,6 @@
 		5917D11021A25E78002F5F6B /* Record */ = {
 			isa = PBXGroup;
 			children = (
-				59C4853C21894C7E007A6C9F /* Video.Record.swift */,
 				5914F141218AD60F000E7FCF /* Video.Record.CameraControl.swift */,
 				59C4856A218982F7007A6C9F /* Video.Record.CaptureButton.swift */,
 				59269E7C2192966200098F72 /* Video.Record.TimeLabel.swift */,
@@ -151,10 +175,11 @@
 		5917D11121A25EF7002F5F6B /* Canvas */ = {
 			isa = PBXGroup;
 			children = (
-				5917D11321A2601D002F5F6B /* Canvas.swift */,
+				5916C6FD21A4F58200496748 /* Timeline */,
 				5918A870219EB9B70090B324 /* Canvas.InsertView.swift */,
 				5914F13A218A8D3F000E7FCF /* Canvas.ViewController.swift */,
 				5917D10D21A24315002F5F6B /* Canvas.ViewController.Model.swift */,
+				5917D11521A282B4002F5F6B /* Canvas.ViewController.Navigable.swift */,
 			);
 			path = Canvas;
 			sourceTree = "<group>";
@@ -162,10 +187,21 @@
 		5917D11221A25F38002F5F6B /* Player */ = {
 			isa = PBXGroup;
 			children = (
-				59156465219C0D12000F34AB /* Video.Player.swift */,
 				5918ACCD219D0D64000F5B30 /* Video.Player.Model.swift */,
 			);
 			path = Player;
+			sourceTree = "<group>";
+		};
+		5917D11721A28511002F5F6B /* Namespace */ = {
+			isa = PBXGroup;
+			children = (
+				5917D11321A2601D002F5F6B /* Canvas.swift */,
+				59269E812192DF4D00098F72 /* Filter.swift */,
+				59156468219C0F06000F34AB /* Video.swift */,
+				59156465219C0D12000F34AB /* Video.Player.swift */,
+				59C4853C21894C7E007A6C9F /* Video.Record.swift */,
+			);
+			path = Namespace;
 			sourceTree = "<group>";
 		};
 		591ADC362193C4EE0021423A /* Protocol */ = {
@@ -179,7 +215,6 @@
 		59269E802192DF2B00098F72 /* Filter */ = {
 			isa = PBXGroup;
 			children = (
-				59269E812192DF4D00098F72 /* Filter.swift */,
 				59269E7E2192DDE500098F72 /* Filter.CollectionView.swift */,
 				591ADC392193E9F40021423A /* Filter.CollectionView.Model.swift */,
 				59269E852192E5B700098F72 /* Filter.CollectionView.Cell.swift */,
@@ -191,6 +226,7 @@
 		59BA28492186AB7E00FC9D65 = {
 			isa = PBXGroup;
 			children = (
+				5924B01221A64062008CC63A /* video.m4v */,
 				59BA28542186AB7E00FC9D65 /* MovieMaker */,
 				59BA28532186AB7E00FC9D65 /* Products */,
 				59BA28832186ACDA00FC9D65 /* Frameworks */,
@@ -210,6 +246,7 @@
 		59BA28542186AB7E00FC9D65 /* MovieMaker */ = {
 			isa = PBXGroup;
 			children = (
+				5917D11721A28511002F5F6B /* Namespace */,
 				5914F143218ADE3C000E7FCF /* Extension.swift */,
 				591ADC362193C4EE0021423A /* Protocol */,
 				5917D11121A25EF7002F5F6B /* Canvas */,
@@ -341,6 +378,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5924B01321A64062008CC63A /* video.m4v in Resources */,
 				59BA285D2186AB7F00FC9D65 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -392,22 +430,28 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5917D11421A2601D002F5F6B /* Canvas.swift in Sources */,
+				59269E822192DF4D00098F72 /* Filter.swift in Sources */,
+				59156469219C0F06000F34AB /* Video.swift in Sources */,
+				59156466219C0D12000F34AB /* Video.Player.swift in Sources */,
+				59C4853D21894C7E007A6C9F /* Video.Record.swift in Sources */,
 				5914F144218ADE3C000E7FCF /* Extension.swift in Sources */,
 				591ADC382193C5690021423A /* Reusable.swift in Sources */,
-				5917D11421A2601D002F5F6B /* Canvas.swift in Sources */,
+				5922BE8221A3AA92004C507D /* Canvas.Timeline.swift in Sources */,
+				59391B1E21AB9A7600275081 /* Canvas.Timeline.Model.swift in Sources */,
+				5916C6FF21A4FA4000496748 /* Canvas.Timeline.Content.swift in Sources */,
+				592EC1E621A51C800047ADF6 /* Canvas.Timeline.Header.swift in Sources */,
+				5924B01521A6784C008CC63A /* Canvas.Timeline.Video.swift in Sources */,
 				5918A871219EB9B70090B324 /* Canvas.InsertView.swift in Sources */,
 				5914F13B218A8D3F000E7FCF /* Canvas.ViewController.swift in Sources */,
 				5917D10E21A24315002F5F6B /* Canvas.ViewController.Model.swift in Sources */,
-				59269E822192DF4D00098F72 /* Filter.swift in Sources */,
+				5917D11621A282B4002F5F6B /* Canvas.ViewController.Navigable.swift in Sources */,
 				59269E7F2192DDE500098F72 /* Filter.CollectionView.swift in Sources */,
 				591ADC3A2193E9F40021423A /* Filter.CollectionView.Model.swift in Sources */,
 				59269E862192E5B700098F72 /* Filter.CollectionView.Cell.swift in Sources */,
 				59269E842192E00300098F72 /* Filter.CollectionView.Delegate.swift in Sources */,
-				59156469219C0F06000F34AB /* Video.swift in Sources */,
 				599E922221995FE50035F1B2 /* Video.Shape.swift in Sources */,
-				59156466219C0D12000F34AB /* Video.Player.swift in Sources */,
 				5918ACCE219D0D64000F5B30 /* Video.Player.Model.swift in Sources */,
-				59C4853D21894C7E007A6C9F /* Video.Record.swift in Sources */,
 				5914F142218AD60F000E7FCF /* Video.Record.CameraControl.swift in Sources */,
 				59C4856B218982F7007A6C9F /* Video.Record.CaptureButton.swift in Sources */,
 				59269E7D2192966200098F72 /* Video.Record.TimeLabel.swift in Sources */,

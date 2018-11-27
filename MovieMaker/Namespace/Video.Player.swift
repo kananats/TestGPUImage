@@ -12,58 +12,67 @@ import ReactiveSwift
 import ReactiveCocoa
 import SnapKit
 
+// MARK: Main
 extension Video {
     
     /// A `UIView` for playing video file
     public final class Player: UIView {
         
+        /// A `Model` for this `UIView`
         private let model = Model()
         
+        /// An `AVPlayerLayer` for playing video
         private lazy var playerLayer: AVPlayerLayer = { return AVPlayerLayer(player: self.model.player) }()
         
+        /// A `UIButton` for play/ pause `AVPlayerItem`
         private lazy var playButton: UIButton = {
             let button = UIButton()
             button.setTitle("Play", for: .normal)
             return button
         }()
         
-        override init(frame: CGRect = .zero) {
-            super.init(frame: frame)
+        /// One-time layout initialization
+        private lazy var makeLayout: () = {
+            self.layer.addSublayer(self.playerLayer)
             
-            self.createLayout()
-            self.prepareToPlay()
+            self.addSubview(self.playButton)
             
             self.bind(with: self.model)
-        }
+        }()
         
-        required init?(coder aDecoder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-    
-        func prepareToPlay() {
-            let url = URL(string: "https://wolverine.raywenderlich.com/content/ios/tutorials/video_streaming/foxVillage.m3u8")!
-            
-            self.model.play(url: url)
-        }
+        public override init(frame: CGRect = .zero) { super.init(frame: frame) }
+        
+        required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     }
 }
 
-// Public
+// MARK: Inheritance
 public extension Video.Player {
-
-}
-
-// Inheritance
-public extension Video.Player {
-
+    
     override func layoutSubviews() {
         super.layoutSubviews()
+        
+        _ = self.makeLayout
         
         self.updateLayout()
     }
 }
 
-// Private
+// MARK: Internal
+internal extension Video.Player {
+    
+    /// Bind with `Canvas.ViewController.Model`
+    @discardableResult
+    func bind(with model: Canvas.ViewController.Model) -> Disposable {
+        let disposable = CompositeDisposable()
+        
+        self.model.fileURL <~ model.fileURL
+        
+        return disposable
+    }
+}
+
+// MARK: Private
 private extension Video.Player {
 
     /// Bind with `Video.Player.Model`
@@ -76,20 +85,11 @@ private extension Video.Player {
         return disposable
     }
     
-    /// Layout initialization
-    func createLayout() {
-        self.layer.addSublayer(self.playerLayer)
-        
-        self.addSubview(self.playButton)
-        
-        self.updateLayout()
-    }
-    
-    /// Update constraints
+    /// Update layout constraints
     func updateLayout() {
         self.playerLayer.frame = self.bounds
         self.playerLayer.videoGravity = .resizeAspectFill
-        
+
         self.playButton.snp.makeConstraints { make in
             make.centerX.centerY.equalToSuperview()
             make.width.height.equalTo(50)

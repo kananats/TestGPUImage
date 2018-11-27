@@ -9,6 +9,7 @@
 import UIKit
 import GPUImage
 
+// MARK: Main
 extension Video {
 
     /// A value describing the intended `Video.Shape` of the recording session
@@ -22,23 +23,7 @@ extension Video {
     }
 }
 
-// Public
-public extension Video.Shape {
-    
-    /// Return an opposite `Video.Shape`
-    func swap() -> Video.Shape {
-        if self == .square { return .rectangle }
-        return .square
-    }
-    
-    /// Return a `UIImage` used for `Shape` switching button
-    var switchButtonImage: UIImage {
-        if self == .square { return UIImage(named: "icoSquare")! }
-        return UIImage(named: "icoSizeOff")!
-    }
-}
-
-// Protocol
+// MARK: Protocol
 extension Video.Shape: CustomStringConvertible {
     
     public var description: String {
@@ -49,9 +34,26 @@ extension Video.Shape: CustomStringConvertible {
     }
 }
 
+// MARK: Public
+public extension Video.Shape {
+    
+    /// Return an opposite `Video.Shape`
+    func swap() -> Video.Shape {
+        if self == .square { return .rectangle }
+        return .square
+    }
+    
+    /// Return a `UIImage` used for `Video.Shape` switching button
+    var switchButtonImage: UIImage {
+        if self == .square { return UIImage(named: "icoSquare")! }
+        return UIImage(named: "icoSizeOff")!
+    }
+}
+
+// MARK: Extension
 extension CGRect {
     
-    /// Applies an `ImageOrientation and `Shape` to a `CGRect`
+    /// Applies an `ImageOrientation and `Video.Shape` to a `CGRect`
     func applying(orientation: ImageOrientation = .portrait, shape: Video.Shape = .rectangle) -> CGRect {
         var origin = self.origin
         var size = self.size
@@ -68,28 +70,5 @@ extension CGRect {
         }
 
         return CGRect(origin: origin, size: size)
-    }
-}
-
-extension CGRect {
-
-    /// Converts to `CGRect` bounds and `CGPoint` position
-    func makeBoundsAndPosition() -> (bounds: CGRect, point: CGPoint) {
-        let bounds = CGRect(x: 0, y: 0, width: self.width, height: self.height)
-        let point = CGPoint(x: self.width / 2 - self.origin.x, y: self.height / 2 - self.origin.y)
-        return (bounds, point)
-    }
-    
-    /// Creates a `CGRect` by swapping the original width and height
-    func transpose() -> CGRect {
-        return CGRect.init(origin: self.origin, size: self.size.transpose())
-    }
-}
-
-public extension CGSize {
-    
-    /// Creates a `CGSize` by swapping the original width and height
-    func transpose() -> CGSize {
-        return CGSize(width: self.height, height: self.width)
     }
 }

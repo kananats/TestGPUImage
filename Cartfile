@@ -1,5 +1,5 @@
 github "ReactiveCocoa/ReactiveCocoa" ~> 7.0
 github "ReactiveCocoa/ReactiveSwift" ~> 3.0
-github "donuts-kris/GPUImage2" "master"
 github "SnapKit/SnapKit" ~> 4.0.0
+github "donuts-kris/GPUImage2" "master"
 github "donuts-kris/KPlugin" "master"

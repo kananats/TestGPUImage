@@ -12,15 +12,16 @@ import Result
 import ReactiveSwift
 import GPUImage
 
+// MARK: Main
 extension Filter {
     
-    /// `UIView` for selecting `Filter`
+    /// A `UIView` for selecting `Filter`
     final class CollectionView: UIView {
         
-        /// `Model` for this `UIViewController`
+        /// A `Model` for this `UIViewController`
         private let model = Model()
 
-        /// `UICollectionView` for selecting `Filter`
+        /// A `UICollectionView` for selecting `Filter`
         private lazy var collectionView: UICollectionView = {
             let collectionView = UICollectionView(frame: self.frame, collectionViewLayout: self.layout)
             
@@ -36,16 +37,20 @@ extension Filter {
             return collectionView
         }()
         
-        /// `UICollectionViewFlowLayout` for `UICollectionView`
+        /// A `UICollectionViewFlowLayout` for `UICollectionView`
         private let layout = UICollectionViewFlowLayout()
         
+        /// One-time layout initialization
+        private lazy var makeLayout: () = {
+            self.addSubview(self.collectionView)
+
+            self.bind(with: self.model)
+        }()
+
         override init(frame: CGRect = .zero) {
             super.init(frame: frame)
             
             self.backgroundColor = .clear
-            
-            self.createLayout()
-            self.bind(with: self.model)
         }
         
         required init?(coder aDecoder: NSCoder) {
@@ -54,21 +59,21 @@ extension Filter {
     }
 }
 
-// Public
+// MARK: Inheritance
 extension Filter.CollectionView {
     
-    /// `Signal<Filter, NoError>` as the binding source
-    var filter: Signal<Filter, NoError> { return self.model.filter.signal }
-    
-    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
-    var orientationBindingTarget: BindingTarget<ImageOrientation> {
-        return self.model.orientation.bindingTarget
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        _ = self.makeLayout
+        
+        self.updateLayout()
     }
 }
 
-// Protocol
+// MARK: Protocol
 extension Filter.CollectionView: UICollectionViewDelegateFlowLayout {
-
+    
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard self.model.indexPath.value != indexPath else { return }
         
@@ -83,21 +88,33 @@ extension Filter.CollectionView: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-
+        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: Cell.reuseIdentifier, for: indexPath) as! Cell
         
         cell.update(filter: Filter.all[indexPath.row])
         
         cell.reactive.isSelected <~ self.model.indexPath.map { $0 == indexPath }
-
+        
         return cell
     }
 }
 
-// Private
+// MARK: Internal
+internal extension Filter.CollectionView {
+    
+    /// A `Signal<Filter, NoError>` as the binding source
+    var filter: Signal<Filter, NoError> { return self.model.filter.signal }
+    
+    /// A `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
+    var orientationBindingTarget: BindingTarget<ImageOrientation> {
+        return self.model.orientation.bindingTarget
+    }
+}
+
+// MARK: Private
 private extension Filter.CollectionView {
     
-    /// `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
+    /// A `BindingTarget<ImageOrientation>` for managing adaptive `ImageOrientation`
     var orientation: BindingTarget<ImageOrientation> {
         return self.reactive.makeBindingTarget { `self`, value in
             `self`.updateLayout(orientation: value)
@@ -114,22 +131,14 @@ private extension Filter.CollectionView {
         return disposable
     }
     
-    
-    /// Layout initialization
-    func createLayout() {
-        self.addSubview(self.collectionView)
-        
-        self.updateLayout()
-    }
-    
-    /// Update constraints
+    /// Update layout constraints
     func updateLayout() {
         self.collectionView.snp.remakeConstraints { make in
             make.edges.equalToSuperview()
         }
     }
     
-    /// Update constraints to fit corresponding `ImageOrientation`
+    /// Update layout constraints to fit corresponding `ImageOrientation`
     func updateLayout(orientation: ImageOrientation) {
 
         // Change item size

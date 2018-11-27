@@ -10,6 +10,7 @@ import UIKit
 import ReactiveSwift
 import ReactiveCocoa
 
+// MARK: Main
 extension Video.Record {
     
     /// `UIView` which presents current duration of the recording session
@@ -26,6 +27,13 @@ extension Video.Record {
             return label
         }()
         
+        /// One-time layout initialization
+        private lazy var makeLayout: () = {
+            self.addSubview(self.imageView)
+            self.addSubview(self.label)
+        }()
+        
+        /// Creates a `TimeLabel` with `UIImage` attached
         init(image: UIImage, frame: CGRect = .zero) {
             super.init(frame: frame)
             
@@ -33,17 +41,25 @@ extension Video.Record {
             self.layer.cornerRadius = 21
             
             self.imageView.image = image
-            
-            self.createLayout()
         }
         
-        required init?(coder aDecoder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
+        required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     }
 }
 
-// Public
+// MARK: Inheritance
+extension Video.Record.TimeLabel {
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        _ = self.makeLayout
+        
+        self.updateLayout()
+    }
+}
+
+// MARK: Internal
 extension Video.Record.TimeLabel {
     
     /// `BindingTarget<TimeInterval>` for updating `UILabel`
@@ -52,18 +68,11 @@ extension Video.Record.TimeLabel {
     }
 }
 
-// Private
-private extension Video.Record.TimeLabel {
-    
-    /// Layout initialization
-    func createLayout() {
-        self.addSubview(self.imageView)
-        self.addSubview(self.label)
-        
-        self.updateLayout()
-    }
 
-    /// Update constraints
+// MARK: Private
+private extension Video.Record.TimeLabel {
+
+    /// Update layout constraints
     func updateLayout() {
         self.imageView.snp.remakeConstraints { make in
             make.left.equalToSuperview().offset(14)
@@ -78,10 +87,10 @@ private extension Video.Record.TimeLabel {
     }
 }
 
-// Extension
+// MARK: Extension
 extension NSAttributedString {
     
-    /// Returns an `NSAttributedString` from the `TimeInterval` given
+    /// Creates a `NSAttributedString` from the `TimeInterval` given
     fileprivate convenience init(time: TimeInterval) {
         let minute = Int(time / 60)
         let second = Int(time) % 60
@@ -91,7 +100,7 @@ extension NSAttributedString {
         self.init(attributedString: attributedString)
     }
     
-    /// Returns an `NSAttributedString` from the minute, second, millisecond given
+    /// Creates a `NSAttributedString` from the minute, second, millisecond given
     private convenience init(minute: Int, second: Int, millisecond: Int) {
         let minuteAndSecond = String(format: "%02ld:%02ld", minute, second)
         let millisecond = String(format: ".%02ld", millisecond)

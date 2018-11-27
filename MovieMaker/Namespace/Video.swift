@@ -6,5 +6,6 @@
 //  Copyright © 2018 s.kananat. All rights reserved.
 //
 
+// MARK: Main
 /// Namespace `Video`
 public final class Video { private init() { } }

@@ -10,6 +10,7 @@ import UIKit
 import ReactiveSwift
 import ReactiveCocoa
 
+// MARK: Main
 extension Canvas {
     
     /// A `UIView` for bgm insertion/ recording session/ import
@@ -22,12 +23,15 @@ extension Canvas {
             return button
         }()
         
+        /// One-time layout initialization
+        private lazy var makeLayout: () = {
+            self.addSubview(self.recordButton)
+        }()
+        
         override init(frame: CGRect = .zero) {
             super.init(frame: frame)
             
             self.backgroundColor = .white
-            
-            self.createLayout()
         }
         
         required init?(coder aDecoder: NSCoder) {
@@ -36,31 +40,36 @@ extension Canvas {
     }
 }
 
-// Public
+// MARK: Inheritance
 extension Canvas.InsertView {
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        _ = self.makeLayout
+        
+        self.updateLayout()
+    }
+}
+
+// MARK: Internal
+internal extension Canvas.InsertView {
     
     /// Bind with `Canvas.ViewController.Model`
     @discardableResult
     func bind(with model: Canvas.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        self.recordButton.reactive.pressed = CocoaAction(model.navigateAction)
+        self.recordButton.reactive.pressed = CocoaAction(model.navigateAction) { Video.Record.ViewController() }
         
         return disposable
     }
 }
 
-// Private
+// MARK: Private
 private extension Canvas.InsertView {
     
-    /// Layout initialization
-    func createLayout() {
-        self.addSubview(self.recordButton)
-        
-        self.updateLayout()
-    }
-    
-    /// Update constraints
+    /// Update layout constraints
     func updateLayout() {
         self.recordButton.snp.remakeConstraints { make in
             make.width.height.equalTo(80)
