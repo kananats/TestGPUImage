@@ -41,12 +41,12 @@ extension CGRect {
     }
 }
 
-public extension AVAsset {
+public extension AVURLAsset {
     
-    static let test: AVAsset = {
+    static let test: AVURLAsset = {
         let path = Bundle.main.path(forResource: "video", ofType:"m4v")!
         let url = URL(fileURLWithPath: path)
-        let asset = AVAsset(url: url)
+        let asset = AVURLAsset(url: url)
         return asset
     }()
 }

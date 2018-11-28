@@ -30,16 +30,16 @@ extension Video.Player {
         var loop: Bool
         
         /// The current `TimeInterval` of the `AVPlayerItem` (observable)
-        let time = MutableProperty<TimeInterval>(0)
+        let offset = MutableProperty<TimeInterval>(0)
         
         /// A `Bool` value that indicates whether the `AVPlayerItem` is ready to play (observable)
         let readyToPlay = MutableProperty<Bool>(false)
 
-        /// A pipe of `Signal<Void, NoError>` indicating whether the `AVPlayerItem` has played to its end time (observable)
+        /// A pipe of `Signal<Void, NoError>` sending events when the `AVPlayerItem` has played to its end time (observable)
         private let didPlayToEndTimePipe = Signal<Void, NoError>.pipe()
 
         /// A `Bool` indicating whether the `AVPlayerItem` is finished playing
-        /// If `loop` is `true`, this will never become `true`
+        /// If `loop` is `true`, this will not become `true`
         private var finishedPlaying = false
 
         /// An `Action` to play/ pause the `AVPlayer`
@@ -54,6 +54,10 @@ extension Video.Player {
                 
                 return SignalProducer { subscriber, lifetime in
                     `self`.play()
+                    
+                    // Observes offset using periodic time observer
+                    let interval = CMTime(seconds: 0.01, preferredTimescale: 600)
+                    lifetime += `self`.offset <~ `self`.player.reactive.periodicTimeObserver(forInterval: interval).map { $0.seconds }
                     
                     // When `AVPlayerItem` played to its end time, restarts if `loop`, terminates otherwise
                     lifetime += `self`.didPlayToEndTime.observeValues {
@@ -91,16 +95,13 @@ extension Video.Player.Model {
     /// A `Bool` indicating whether the `AVPlayerItem` is playing (observable)
     var playing: Property<Bool> { return self.playAction.isExecuting }
     
-    /// A `BindingTarget` for managing received file
-    var fileURL: BindingTarget<URL> {
-        return self.playerItem.bindingTarget.transform { AVPlayerItem(url: $0) }
-    }
-    
-    /// Add video at `URL` to `AVPlayerItem`
-    func add(url: URL) {
-        let playerItem = AVPlayerItem(url: url)
-        
-        self.playerItem.swap(playerItem)
+    /// A `BindingTarget` for playing the `AVAsset` at `URL`
+    var url: BindingTarget<URL?> {
+        return self.playerItem.bindingTarget.transform { value in
+            guard let value = value else { return nil }
+            
+            return AVPlayerItem(url: value)
+        }
     }
 }
 
@@ -111,8 +112,10 @@ private extension Video.Player.Model {
     func play() {
         guard self.readyToPlay.value else { fatalError("`play()` cannot be called while `readyToPlay` is `false`") }
         
-        if `self`.finishedPlaying { `self`.player.seek(to: .zero) }
-        
+        if self.finishedPlaying {
+            self.player.seek(to: .zero)
+        }
+
         self.player.play()
     }
     
@@ -145,10 +148,25 @@ private extension Video.Player.Model {
             
             `self`.player.replaceCurrentItem(with: value)
             
-            `self`.readyToPlay <~ value.reactive.readyToPlay
-            `self`.time <~ value.reactive.currentTime.map { $0.seconds }
-   
-            `self`.didPlayToEndTimePipe.input <~ value.reactive.didPlayToEndTime.map { _ in () }
+            disposable += `self`.readyToPlay <~ value.reactive.readyToPlay
+            
+            //disposable += `self`.offset <~ value.reactive.currentTime.filter { _ in `self`.playing.value }.map { $0.seconds }
+            
+            /*
+            value.reactive.currentTime.producer.startWithValues { value in
+                if value.seconds < 0 {
+                    fatalError()
+                }
+            }
+            */
+            disposable += `self`.didPlayToEndTimePipe.input <~ value.reactive.didPlayToEndTime.ignoreValue()
+        }
+        
+        disposable += self.offset.producer.startWithValues { [weak self] value in
+            guard let `self` = self, !`self`.playing.value else { return }
+            
+            let time = CMTime(seconds: value, preferredTimescale: 600)
+            `self`.player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
         }
         
         // Debug purpose
@@ -166,8 +184,8 @@ private extension Video.Player.Model {
         //disposable += self.status.producer.startWithValues { print("status", $0) }
         //disposable += self.readyToPlay.producer.startWithValues { print("readyToPlay", $0) }
         //disposable += self.didPlayToEndTime.observeValues { print("didPlayToEndTime") }
-        //disposable += self.currentTime.producer.startWithValues { print("readyToPlay", $0) }
-
+        //disposable += self.offset.debug("offset")
+        
         return disposable
     }
 }

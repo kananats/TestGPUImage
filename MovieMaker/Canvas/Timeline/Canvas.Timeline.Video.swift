@@ -13,17 +13,17 @@ import AVFoundation
 extension Canvas.Timeline {
     
     /// A `UIView` representing video content in `Canvas.Timeline`
-    final class Video: Canvas.Timeline.Content {
+    public final class Video: Canvas.Timeline.Content {
         
-        /// `AVAsset` of this content
-        let asset: AVAsset
+        /// An `AVURLAsset` of this content
+        let asset: AVURLAsset
         
         /// One-time layout initialization
         private lazy var makeLayout: () = {
             self.makeThumbnails()
         }()
         
-        init(asset: AVAsset) {
+        init(asset: AVURLAsset) {
             self.asset = asset
             
             super.init(duration: asset.duration.seconds)
@@ -45,14 +45,17 @@ extension Canvas.Timeline.Video {
     }
 }
 
-// MARK: Internal
-internal extension Canvas.Timeline.Video {
+// MARK: Public
+public extension Canvas.Timeline.Video {
     
     convenience init(url: URL) {
-        let asset = AVAsset(url: url)
+        let asset = AVURLAsset(url: url)
         
         self.init(asset: asset)
     }
+    
+    /// A `URL` of the video
+    var url: URL { return self.asset.url }
 }
 
 // MARK: Private

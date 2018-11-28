@@ -8,6 +8,7 @@
 
 import UIKit
 import AVFoundation
+import Result
 import ReactiveSwift
 
 // MARK: Main
@@ -21,6 +22,13 @@ extension Canvas.Timeline {
         
         /// Previous content. Setting this will also adjust layout
         weak var previous: Content?
+        
+        /// `UIGestureRecognizer` for tap detection
+        private lazy var gesture: UIGestureRecognizer = {
+            let gesture = UITapGestureRecognizer()
+            self.addGestureRecognizer(gesture)
+            return gesture
+        }()
         
         init(duration: TimeInterval = 0) {
             self.duration = duration
@@ -50,8 +58,12 @@ internal extension Canvas.Timeline.Content {
     /// Width of the `Content`
     @objc var width: Double { return self.duration * Double(Canvas.Timeline.widthPerSecond) }
     
-    /// Height of the `Content`
-    final var height: Double { return Double(self.bounds.height) }
+    /// Tapped signal
+    var tapped: Signal<Canvas.Timeline.Content, NoError> {
+        return self.gesture.reactive.stateChanged.filterMap { [weak self] _ in
+            return self
+        }
+    }
     
     /// Update layout constraints
     @objc func updateLayout() {

@@ -20,18 +20,18 @@ extension Canvas {
         private let model = Model()
         
         /// A `UIView` for preview current videos processing job
-        private let playerView = Video.Player()
+        private let player = Video.Player(playImmediately: false)
         
         /// A `UIView` for controlling `Video.Player`
-        private lazy var timelineView: Timeline = { return Timeline() }()
+        private let timeline = Timeline()
         
         /// A `UIView` for bgm addition/ recording session/ import
         private let insertView = InsertView()
 
         /// One-time layout initialization
         private lazy var makeLayout: () = {
-            self.view.addSubview(self.playerView)
-            self.view.addSubview(self.timelineView)
+            self.view.addSubview(self.player)
+            self.view.addSubview(self.timeline)
             self.view.addSubview(self.insertView)
             
             self.bind(with: self.model)
@@ -44,8 +44,6 @@ extension Canvas {
         required init?(coder aDecoder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
-        
-        public convenience init() { self.init(nibName: nil, bundle: nil) }
     }
 }
 
@@ -69,6 +67,11 @@ public extension Canvas.ViewController {
     }
 }
 
+// MARK: Public
+public extension Canvas.ViewController {
+    convenience init() { self.init(nibName: nil, bundle: nil) }
+}
+
 // MARK: Private
 private extension Canvas.ViewController {
     
@@ -78,8 +81,8 @@ private extension Canvas.ViewController {
         let disposable = CompositeDisposable()
         
         disposable += self.insertView.bind(with: model)
-        disposable += self.playerView.bind(with: model)
-        disposable += self.timelineView.bind(with: model)
+        disposable += self.player.bind(with: model)
+        disposable += self.timeline.bind(with: model)
         
         disposable += model.navigateAction.values.observeValues { [weak self] value in
             guard let `self` = self else { return }
@@ -93,11 +96,11 @@ private extension Canvas.ViewController {
     /// Update layout constraints
     func updateLayout() {
         
-        self.playerView.snp.remakeConstraints { make in
+        self.player.snp.remakeConstraints { make in
             make.edges.equalToSuperview()
         }
         
-        self.timelineView.snp.makeConstraints { make in
+        self.timeline.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.bottom.equalToSuperview()
             make.width.equalToSuperview()

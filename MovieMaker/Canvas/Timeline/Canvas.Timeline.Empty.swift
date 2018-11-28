@@ -1,5 +1,5 @@
 //
-//  Canvas.Timeline.Header.swift
+//  Canvas.Timeline.Empty.swift
 //  MovieMaker
 //
 //  Created by s.kananat on 2018/11/21.
@@ -12,12 +12,13 @@ import UIKit
 extension Canvas.Timeline {
     
     /// A `UIView` representing header/ footer content in `Canvas.Timeline`
-    final class Header: Canvas.Timeline.Content {
+    final class Empty: Canvas.Timeline.Content {
         
         init() {
             super.init(duration: 0)
             
-            self.backgroundColor = .black
+            //self.backgroundColor = .black
+            self.alpha = 0
         }
         
         required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -25,10 +26,10 @@ extension Canvas.Timeline {
 }
 
 // MARK: Inheritance
-extension Canvas.Timeline.Header {
+extension Canvas.Timeline.Empty {
     
-    /// Width of the header content is always half of the bounds
-    override var width: Double { return Double(self.bounds.width) / 2 }
+    /// Width of the header content is always zero
+    override var width: Double { return 0 }
     
     override func updateLayout() {
         self.snp.remakeConstraints { make in

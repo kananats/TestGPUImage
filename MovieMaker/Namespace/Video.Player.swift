@@ -10,7 +10,6 @@ import UIKit
 import AVFoundation
 import ReactiveSwift
 import ReactiveCocoa
-import SnapKit
 
 // MARK: Main
 extension Video {
@@ -19,7 +18,7 @@ extension Video {
     public final class Player: UIView {
         
         /// A `Model` for this `UIView`
-        private let model = Model()
+        private let model: Model
         
         /// An `AVPlayerLayer` for playing video
         private lazy var playerLayer: AVPlayerLayer = { return AVPlayerLayer(player: self.model.player) }()
@@ -39,8 +38,12 @@ extension Video {
             
             self.bind(with: self.model)
         }()
-        
-        public override init(frame: CGRect = .zero) { super.init(frame: frame) }
+
+        public init(frame: CGRect = .zero, playImmediately: Bool = true, loop: Bool = false) {
+            self.model = Model(playImmediately: playImmediately, loop: loop)
+            
+            super.init(frame: frame)
+        }
         
         required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     }
@@ -66,7 +69,10 @@ internal extension Video.Player {
     func bind(with model: Canvas.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        self.model.fileURL <~ model.fileURL
+        disposable += self.model.url <~ model.url
+        disposable += self.model.offset <~ model.offset
+        
+        model.offset.producer.filter { $0 < 0 }.debug("model offset")
         
         return disposable
     }

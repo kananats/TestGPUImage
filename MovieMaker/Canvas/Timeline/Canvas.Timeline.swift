@@ -23,7 +23,7 @@ extension Canvas {
         private lazy var scrollView: UIScrollView = {
             let scrollView = UIScrollView(frame: self.bounds)
 
-            // hide scroll bars
+            // Hide scroll bars
             scrollView.showsHorizontalScrollIndicator = false
             scrollView.showsVerticalScrollIndicator = false
 
@@ -57,11 +57,11 @@ extension Canvas {
         private let headerFooterSize = MutableProperty<CGRect>(.zero)
         
         /// Header `Content`
-        private let header: Content = Header()
+        private let header: Content = Empty()
         
         /// Footer `Content`
         private lazy var footer: Content = {
-            let content = Header()
+            let content = Empty()
             content.previous = self.header
             return content
         }()
@@ -138,7 +138,19 @@ internal extension Canvas.Timeline {
     func bind(with model: Canvas.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += self.headerFooterSize <~ self.reactive.bounds
+        disposable += model.url <~ self.model.index.producer.map { [weak self] value -> URL? in
+            guard let `self` = self, let value = value else { return nil }
+            
+            switch `self`[value] {
+            case let video as Video:
+                return video.url
+                
+            default:
+                return nil
+            }
+        }
+        
+        disposable += model.offset <~ self.model.offset.map { $0 ?? 0 }
         
         return disposable
     }
@@ -152,6 +164,7 @@ private extension Canvas.Timeline {
     func bind() -> Disposable {
         let disposable = CompositeDisposable()
         
+        disposable += self.headerFooterSize <~ self.reactive.bounds
         disposable += self.scrollView.reactive.contentSize <~ self.contentSize
         
         return disposable
@@ -163,7 +176,7 @@ private extension Canvas.Timeline {
         let disposable = CompositeDisposable()
         
         // Converts normalized content offset into duration
-        disposable += model.timeBindingTarget <~ self.scrollView.reactive.normalizedContentOffset.map { $0.x }.map { Double($0) * self.contentWidth.value / Canvas.Timeline.widthPerSecond }
+        disposable += model.seekBindingTarget <~ self.scrollView.reactive.normalizedContentOffset.map { $0.x }.map { Double($0) * self.contentWidth.value / Canvas.Timeline.widthPerSecond }
         
         // Observes content being added
         disposable += model.contentAddedSignal.observeValues { [weak self] content, index in
@@ -180,7 +193,30 @@ private extension Canvas.Timeline {
             `self`.contentWidth.swap(contentWidth)
         }
         
+        disposable += model.contentSelectAction.values.observeValues { [weak self] value in
+            guard let `self` = self else { return }
+
+            `self`.seek(to: value)
+        }
+        
         return disposable
+    }
+    
+    func seek(to content: Content) {
+        var content: Content! = content
+        
+        // Center position
+        var x = content.width / 2
+        
+        while content.previous != nil {
+            content = content.previous
+            x = x + content.width
+        }
+        
+        var offset = self.scrollView.contentOffset
+        offset.x = CGFloat(x)
+        
+        self.scrollView.setContentOffset(offset, animated: true)
     }
     
     /// `CGSize` of the `Content` in the `UIScrollView`, including header and footer (observable)

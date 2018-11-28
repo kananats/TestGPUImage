@@ -20,8 +20,15 @@ extension Canvas.ViewController {
         /// Current `UIInterfaceOrientation` (observable)
         let orientation: MutableProperty<UIInterfaceOrientation> = { return MutableProperty(.current) }()
         
+        /// Current file URL of selected content (observable)
+        let url = MutableProperty<URL?>(nil)
+        
+        /// Timing offset of current selected content (observable)
+        let offset = MutableProperty<TimeInterval>(0)
+        
         private let fileURLPipe = Signal<URL, NoError>.pipe()
         
+        // TODO: move
         var fileURL: Signal<URL, NoError> { return self.fileURLPipe.output }
         
         /// `Action` for navigating
@@ -63,17 +70,7 @@ private extension Canvas.ViewController.Model {
     func bind() -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += self.debug()
         
-        return disposable
-    }
-    
-    /// For debug
-    @discardableResult
-    func debug() -> Disposable {
-        let disposable = CompositeDisposable()
-        
-        // disposable += self.fileURLPipe.output.observeValues { print("fileURL", $0) }
         
         return disposable
     }
