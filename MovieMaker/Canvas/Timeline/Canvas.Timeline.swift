@@ -30,7 +30,7 @@ extension Canvas {
             return scrollView
         }()
         
-        /// Timeline current time indicator
+        /// Current seek indicator
         private lazy var line: CALayer = {
             let frame = self.bounds
             let layer = CAShapeLayer()
@@ -56,25 +56,15 @@ extension Canvas {
         /// `CGSize` of the header and footer (observable)
         private let headerFooterSize = MutableProperty<CGRect>(.zero)
         
-        /// Header `Content`
-        private let header: Content = Empty()
-        
-        /// Footer `Content`
-        private lazy var footer: Content = {
-            let content = Empty()
-            content.previous = self.header
-            return content
-        }()
-        
         /// One-time layout initialization
         private lazy var makeLayout: () = {
-            
             self.addSubview(self.scrollView)
-
-            self.scrollView.addSubview(self.header)
-            self.scrollView.addSubview(self.footer)
+            
             self.layer.addSublayer(self.line)
-
+            
+            self.scrollView.addSubview(self.model.header)
+            self.scrollView.addSubview(self.model.footer)
+            
             self.bind()
             self.bind(with: self.model)
         }()
@@ -101,28 +91,7 @@ public extension Canvas.Timeline {
 public extension Canvas.Timeline {
     
     subscript(index: Int) -> Content {
-        get {
-            // Skip header
-            let index = index + 1
-            
-            guard index >= 0 && index < self.scrollView.subviews.count else {
-                fatalError("Index out of range")
-            }
-            
-            return self.scrollView.subviews[index] as! Content
-        }
-        
-        set(value) {
-            // Skip header
-            let index = index + 1
-            
-            guard index >= 0 && index < self.scrollView.subviews.count else {
-                fatalError("Index out of range")
-            }
-            
-            self.scrollView.insertSubview(value, at: index)
-            print("add")
-        }
+        get { return self.model.contents[index] }
     }
 }
 
@@ -140,17 +109,9 @@ internal extension Canvas.Timeline {
     func bind(with model: Canvas.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        let x = SignalProducer.merge(self.model.index.producer, self.contentWidth.producer.filterMap { [weak self] _ in
-                guard let `self` = self else { return nil }
-            
-                return `self`.model.index.value
-            })
-        
         disposable += model.url <~ self.model.index.map { [weak self] value -> URL? in
             guard let `self` = self, let value = value else { return nil }
             
-            print("value", value)
-
             switch `self`[value] {
             case let video as Video:
                 return video.url
@@ -195,17 +156,13 @@ private extension Canvas.Timeline {
         disposable += model.contentAdded.observeValues { [weak self] content, index in
             guard let `self` = self else { return }
             
-            let previous = `self`[index - 1]
-            let next = `self`[index]
-            `self`[index] = content
-            
-            content.previous = previous
-            next.previous = content
+            `self`.scrollView.insertSubview(content, at: index)
             
             let contentWidth = `self`.contentWidth.value + content.width
             `self`.contentWidth.swap(contentWidth)
         }
         
+        // Observes contents being selected
         disposable += model.contentSelectAction.values.observeValues { [weak self] value in
             guard let `self` = self else { return }
 
@@ -254,7 +211,6 @@ private extension Canvas.Timeline {
 
         //add con1
         let con1 = Video(asset: .test)
-        
         self.model.add(content: con1)
 
         //add con2

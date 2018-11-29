@@ -21,7 +21,7 @@ extension Video {
         private let model: Model
         
         /// An `AVPlayerLayer` for playing video
-        private lazy var playerLayer: AVPlayerLayer = { return AVPlayerLayer(player: self.model.player) }()
+        private lazy var playerLayer: AVPlayerLayer = { AVPlayerLayer(player: self.model.player) }()
         
         /// A `UIButton` for play/ pause `AVPlayerItem`
         private lazy var playButton: UIButton = {

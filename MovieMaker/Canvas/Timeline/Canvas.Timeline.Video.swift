@@ -64,21 +64,21 @@ private extension Canvas.Timeline.Video {
     /// Renders a series of thumbnails
     func makeThumbnails() {
         
-        // horizontal step
-        let width = Canvas.Timeline.widthPerThumbnail
+        // Horizontal step
+        let step = Canvas.Timeline.widthPerThumbnail
         
-        for i in stride(from: 0.0, to: self.width, by: width)
+        for i in stride(from: 0, to: self.width, by: step)
         {
-            // seconds for taking screenshot
+            // Seconds for taking screenshot
             let seconds = i / Canvas.Timeline.widthPerSecond
 
             guard let image = self.asset.makeScreenshot(at: seconds) else { return }
-            
+
             let imageView = UIImageView(image: image)
             self.addSubview(imageView)
             
             imageView.snp.remakeConstraints() { make in
-                make.width.equalTo(width)
+                make.width.equalTo(step)
                 make.height.lessThanOrEqualToSuperview()
                 make.left.equalToSuperview().offset(i)
                 make.centerY.equalToSuperview()

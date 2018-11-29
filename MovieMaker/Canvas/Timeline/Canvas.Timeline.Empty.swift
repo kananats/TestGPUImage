@@ -17,7 +17,6 @@ extension Canvas.Timeline {
         init() {
             super.init(duration: 0)
             
-            //self.backgroundColor = .black
             self.alpha = 0
         }
         

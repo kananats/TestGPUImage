@@ -18,7 +18,7 @@ extension Canvas.ViewController {
     final class Model {
         
         /// Current `UIInterfaceOrientation` (observable)
-        let orientation: MutableProperty<UIInterfaceOrientation> = { return MutableProperty(.current) }()
+        let orientation: MutableProperty<UIInterfaceOrientation> = { MutableProperty(.current) }()
         
         /// Current file URL of selected content (observable)
         let url = MutableProperty<URL?>(nil)

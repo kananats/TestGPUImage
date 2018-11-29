@@ -190,7 +190,7 @@ extension Video.Record.ViewController {
         }()
         
         /// `Action` to dismiss `UIViewController`
-        lazy var dismissAction: Action<Void, Void, NoError> = { return .single(enabledIf: !self.isRecording) }()
+        lazy var dismissAction: Action<Void, Void, NoError> = { .single(enabledIf: !self.isRecording) }()
         
         init?() {
             guard Camera.front != nil, Camera.back != nil else { return nil }

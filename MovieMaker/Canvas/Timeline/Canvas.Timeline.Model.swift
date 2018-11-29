@@ -17,8 +17,18 @@ extension Canvas.Timeline {
     /// `Model` to be binded with `Canvas.Timeline`
     final class Model {
         
-        /// An `Array` collecting duration of each contents
-        private var durations: [TimeInterval] = []
+        /// Header `Content`
+        let header: Content = Empty()
+        
+        /// Footer `Content`
+        lazy var footer: Content = {
+            let content = Empty()
+            content.previous = self.header
+            return content
+        }()
+        
+        /// An `Array` collecting all contents, excluding header and footer
+        private(set) var contents: [Content] = []
         
         /// A pipe of `Signal<(Content, Int), NoError>` which is triggered when new content was added (observable)
         private let contentAddedPipe = Signal<(content: Content, index: Int), NoError>.pipe()
@@ -38,9 +48,7 @@ extension Canvas.Timeline {
         /// Current timing position from the beginning (observable)
         private let seek = MutableProperty<Double>(0)
 
-        init() {
-            self.bind()
-        }
+        init() { self.bind() }
     }
 }
 
@@ -48,7 +56,7 @@ extension Canvas.Timeline {
 internal extension Canvas.Timeline.Model {
     
     /// Total durations
-    var duration: TimeInterval { return self.durations.reduce(0, +) }
+    var duration: TimeInterval { return self.contents.map { $0.duration }.reduce(0, +) }
     
     /// Current selected index (observable)
     /// Returns nil when there is no content
@@ -75,12 +83,17 @@ internal extension Canvas.Timeline.Model {
     /// Add a `Content` without specifying index. The content to be added will be at right after currently selected content
     func add(content: Canvas.Timeline.Content) {
         let index = 1 + (self.index.value ?? -1)
-
+        
         self.add(content: content, index: index)
     }
     
     /// Add a `Content` by specifying index
     func add(content: Canvas.Timeline.Content, index: Int) {
+        print("add:content:")
+        // Ensures that header and footer is already added
+        _ = self.header
+        _ = self.footer
+        
         self.contentAddedPipe.input.send(value: (content, index))
     }
 }
@@ -89,13 +102,13 @@ internal extension Canvas.Timeline.Model {
 private extension Canvas.Timeline.Model {
 
     /// Current selected index and timing offset (observable)
-    /// Returns nil if there is no content
+    /// Returns nil when there is no content
     var indexAndOffset: Property<(index: Int?, offset: TimeInterval?)> {
         return self.seek.map { [weak self] value in
             guard let `self` = self else { return (nil, nil) }
 
             return `self`.makeIndexAndOffset(value)
-        }
+        }.skipRepeats { $0.index == $1.index && $0.offset == $1.offset }
     }
 
     /// Bind
@@ -103,19 +116,31 @@ private extension Canvas.Timeline.Model {
     func bind() -> Disposable {
         let disposable = CompositeDisposable()
 
-        // Insert contents
+        // Observes contents being added
         disposable += self.contentAdded.observeValues { [weak self] content, index in
             guard let `self` = self else { return }
 
-            guard index >= 0 && index <= self.durations.count else {
-                fatalError("Index out of range")
-            }
+            var previous: Canvas.Timeline.Content = `self`.header
+            if index - 1 >= 0 { previous = `self`.contents[index - 1] }
             
-            `self`.durations.insert(content.duration, at: index)
+            var next: Canvas.Timeline.Content = `self`.footer
+            if index < `self`.contents.count { next = `self`.contents[index] }
+
+            content.previous = previous
+            next.previous = content
+            
+            `self`.contents.insert(content, at: index)
 
             disposable += self.contentSelectAction <~ content.tapped
         }
 
+        // Recalculates index and offset when content was added
+        disposable += self.seek <~ self.contentAdded.filterMap { [weak self] _ in
+            guard let `self` = self else { return nil }
+            
+            return `self`.seek.value
+        }
+        
         return disposable
     }
     
@@ -126,12 +151,12 @@ private extension Canvas.Timeline.Model {
         guard self.duration > 0 else { return (nil, nil) }
         
         var seek = seek
-        for (index, element) in self.durations.enumerated() {
-            if seek <= element { return (index, seek) }
-            seek -= element
+        for (index, element) in self.contents.enumerated() {
+            if seek <= element.duration { return (index, seek) }
+            seek -= element.duration
         }
 
         // Seek should not exceed valid duration
-        fatalError("Seek should not exceed valid duration")
+        fatalError("Seek \(seek) should not exceed valid duration \(self.duration)")
     }
 }
