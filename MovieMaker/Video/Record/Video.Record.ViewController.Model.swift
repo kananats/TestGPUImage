@@ -270,9 +270,6 @@ private extension Video.Record.ViewController.Model {
             `self`.dismissAction.apply().start()
         }
         
-        // Debug purpose
-        disposable += self.debug()
-        
         return disposable
     }
 
@@ -307,17 +304,5 @@ private extension Video.Record.ViewController.Model {
             
             callback(fileURL)
         }
-    }
-    
-    /// For debug
-    func debug() -> Disposable {
-        let disposable = CompositeDisposable()
-        
-        //disposable += self.isRecording.producer.startWithValues { print("isRecording \($0)") }
-        //disposable += self.isCountingDown.producer.startWithValues { print("isCountingDown \($0)") }
-        //disposable += self.recordAction.values.observeValues { print("recordingAction values \($0)") }
-        //disposable += self.shape.producer.startWithValues { print("shape \($0)") }
-        
-        return disposable
     }
 }

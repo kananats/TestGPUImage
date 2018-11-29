@@ -72,8 +72,6 @@ internal extension Video.Player {
         disposable += self.model.url <~ model.url
         disposable += self.model.offset <~ model.offset
         
-        model.offset.producer.filter { $0 < 0 }.debug("model offset")
-        
         return disposable
     }
 }

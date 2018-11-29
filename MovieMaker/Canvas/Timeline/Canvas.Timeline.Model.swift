@@ -23,6 +23,7 @@ extension Canvas.Timeline {
         /// A pipe of `Signal<(Content, Int), NoError>` which is triggered when new content was added (observable)
         private let contentAddedPipe = Signal<(content: Content, index: Int), NoError>.pipe()
         
+        /// An `Action` which is triggered when a content is selected
         lazy var contentSelectAction: Action<Content, Content, NoError> = {
             return Action { [weak self] input in
                 guard let `self` = self else { return .empty }
@@ -50,15 +51,15 @@ internal extension Canvas.Timeline.Model {
     var duration: TimeInterval { return self.durations.reduce(0, +) }
     
     /// Current selected index (observable)
-    /// Returns nil if there is no content
+    /// Returns nil when there is no content
     var index: Property<Int?> { return self.indexAndOffset.map { $0.index }.skipRepeats() }
     
     /// Current timing position from the beginning of current content (observable)
-    /// Returns nil if there is no content
+    /// Returns nil when there is no content
     var offset: Property<TimeInterval?> { return self.indexAndOffset.map { $0.offset }.skipRepeats() }
     
     /// A `Signal<(Content, Int), NoError>` which is triggered when new content was added (observable)
-    var contentAddedSignal: Signal<(content: Canvas.Timeline.Content, index: Int), NoError> {
+    var contentAdded: Signal<(content: Canvas.Timeline.Content, index: Int), NoError> {
         return self.contentAddedPipe.output
     }
     
@@ -66,6 +67,7 @@ internal extension Canvas.Timeline.Model {
     var seekBindingTarget: BindingTarget<TimeInterval> {
         return self.seek.bindingTarget.transform { [weak self] value in
             guard let `self` = self else { return 0 }
+            
             return value.clamped(to: 0 ... `self`.duration)
         }
     }
@@ -85,13 +87,13 @@ internal extension Canvas.Timeline.Model {
 
 // Mark: Private
 private extension Canvas.Timeline.Model {
-    
+
     /// Current selected index and timing offset (observable)
     /// Returns nil if there is no content
     var indexAndOffset: Property<(index: Int?, offset: TimeInterval?)> {
-        return self.seek.skipRepeats().map { [weak self] value in
+        return self.seek.map { [weak self] value in
             guard let `self` = self else { return (nil, nil) }
-            
+
             return `self`.makeIndexAndOffset(value)
         }
     }
@@ -100,8 +102,9 @@ private extension Canvas.Timeline.Model {
     @discardableResult
     func bind() -> Disposable {
         let disposable = CompositeDisposable()
-        
-        disposable += self.contentAddedSignal.observeValues { [weak self] content, index in
+
+        // Insert contents
+        disposable += self.contentAdded.observeValues { [weak self] content, index in
             guard let `self` = self else { return }
 
             guard index >= 0 && index <= self.durations.count else {
@@ -109,12 +112,10 @@ private extension Canvas.Timeline.Model {
             }
             
             `self`.durations.insert(content.duration, at: index)
-            
+
             disposable += self.contentSelectAction <~ content.tapped
         }
-        
-        disposable += self.debug()
-        
+
         return disposable
     }
     
@@ -125,22 +126,12 @@ private extension Canvas.Timeline.Model {
         guard self.duration > 0 else { return (nil, nil) }
         
         var seek = seek
-        for (index, duration) in self.durations.enumerated() {
-            if seek <= duration { return (index, seek) }
-            seek -= duration
+        for (index, element) in self.durations.enumerated() {
+            if seek <= element { return (index, seek) }
+            seek -= element
         }
 
         // Seek should not exceed valid duration
-        fatalError()
-    }
-    
-    /// For debug
-    @discardableResult
-    func debug() -> Disposable {
-        let disposable = CompositeDisposable()
-        
-        
-        
-        return disposable
+        fatalError("Seek should not exceed valid duration")
     }
 }

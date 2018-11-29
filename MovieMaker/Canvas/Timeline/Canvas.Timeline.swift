@@ -111,6 +111,7 @@ public extension Canvas.Timeline {
             
             return self.scrollView.subviews[index] as! Content
         }
+        
         set(value) {
             // Skip header
             let index = index + 1
@@ -120,6 +121,7 @@ public extension Canvas.Timeline {
             }
             
             self.scrollView.insertSubview(value, at: index)
+            print("add")
         }
     }
 }
@@ -138,18 +140,29 @@ internal extension Canvas.Timeline {
     func bind(with model: Canvas.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += model.url <~ self.model.index.producer.map { [weak self] value -> URL? in
+        let x = SignalProducer.merge(self.model.index.producer, self.contentWidth.producer.filterMap { [weak self] _ in
+                guard let `self` = self else { return nil }
+            
+                return `self`.model.index.value
+            })
+        
+        disposable += model.url <~ self.model.index.map { [weak self] value -> URL? in
             guard let `self` = self, let value = value else { return nil }
             
+            print("value", value)
+
             switch `self`[value] {
             case let video as Video:
                 return video.url
+                
+            case _ as Empty:
+                fatalError()
                 
             default:
                 return nil
             }
         }
-        
+
         disposable += model.offset <~ self.model.offset.map { $0 ?? 0 }
         
         return disposable
@@ -178,8 +191,8 @@ private extension Canvas.Timeline {
         // Converts normalized content offset into duration
         disposable += model.seekBindingTarget <~ self.scrollView.reactive.normalizedContentOffset.map { $0.x }.map { Double($0) * self.contentWidth.value / Canvas.Timeline.widthPerSecond }
         
-        // Observes content being added
-        disposable += model.contentAddedSignal.observeValues { [weak self] content, index in
+        // Observes contents being added
+        disposable += model.contentAdded.observeValues { [weak self] content, index in
             guard let `self` = self else { return }
             
             let previous = `self`[index - 1]
@@ -202,6 +215,7 @@ private extension Canvas.Timeline {
         return disposable
     }
     
+    /// Seek to center the content
     func seek(to content: Content) {
         var content: Content! = content
         

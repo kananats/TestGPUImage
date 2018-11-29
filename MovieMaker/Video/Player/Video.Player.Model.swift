@@ -168,24 +168,7 @@ private extension Video.Player.Model {
             let time = CMTime(seconds: value, preferredTimescale: 600)
             `self`.player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
         }
-        
-        // Debug purpose
-        disposable += self.debug()
-        
-        return disposable
-    }
-    
-    /// For debug
-    func debug() -> Disposable {
-        let disposable = CompositeDisposable()
-        
-        //disposable += self.isPlaybackLikelyToKeepUp.producer.startWithValues { print("isPlaybackLikelyToKeepUp", $0) }
-        //disposable += self.isPlaybackBufferFull.producer.startWithValues { print("isPlaybackBufferFull", $0) }
-        //disposable += self.status.producer.startWithValues { print("status", $0) }
-        //disposable += self.readyToPlay.producer.startWithValues { print("readyToPlay", $0) }
-        //disposable += self.didPlayToEndTime.observeValues { print("didPlayToEndTime") }
-        //disposable += self.offset.debug("offset")
-        
+
         return disposable
     }
 }
