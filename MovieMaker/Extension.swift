@@ -99,22 +99,6 @@ public extension Reactive where Base: UIScrollView {
             return CGPoint(x: x, y: y)
         }.skipRepeats()
     }
-    
-    /// The point at which the origin of the content view is offset from the origin of the scroll view, clamped between minimum and maximum possible values (observable)
-    var clampedContentOffset: SignalProducer<CGPoint, NoError> {
-        return self.contentOffset.filterMap { [weak base] value in
-            
-            guard let base = base else { return nil }
-
-            let min = base.minimumContentOffset
-            let max = base.maximumContentOffset
-            
-            let x = value.x.clamped(to: min.x ... max.x )
-            let y = value.y.clamped(to: min.y ... max.y )
-        
-            return CGPoint(x: x, y: y)
-        }.skipRepeats()
-    }
 }
 
 public extension UIImage {

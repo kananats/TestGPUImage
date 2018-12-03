@@ -145,12 +145,18 @@ private extension Canvas.Timeline {
         }
         
         // Timing offset -> scrollview content offset
-        disposable += model.offset.external.filterMap { value in
+        disposable += model.offset.external.filterMap { value -> CGPoint? in
             guard let value = value else { return nil }
             
             return CGPoint(x: value * Canvas.Timeline.widthPerSecond, y: 0)
-        }.startWithValues { value in
-            self.scrollView.setContentOffset(value, animated: false)
+        }.startWithValues { [weak self] value in
+            guard let `self` = self else { return }
+            
+            // TODO: Stops playing
+            if `self`.scrollView.isTracking || `self`.scrollView.isDragging || `self`.scrollView.isDecelerating { return }
+            
+            // Sets content offset
+            `self`.scrollView.setContentOffset(value, animated: false)
         }
         
         // Observes contents being added
