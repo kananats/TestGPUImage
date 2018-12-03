@@ -20,11 +20,13 @@ extension Canvas.ViewController {
         /// Current `UIInterfaceOrientation` (observable)
         let orientation: MutableProperty<UIInterfaceOrientation> = { MutableProperty(.current) }()
         
-        /// Current file URL of selected content (observable)
+        /// Current asset URL of the selected content (observable)
+        /// Returns nil when where is no content
         let url = MutableProperty<URL?>(nil)
         
-        /// Timing offset of current selected content (observable)
-        let offset = MutableProperty<TimeInterval>(0)
+        /// Timing offset of the selected content (observable)
+        /// Returns nil when there is no content
+        let offset = BidirectionalProperty<TimeInterval?>(nil)
         
         private let fileURLPipe = Signal<URL, NoError>.pipe()
         
@@ -69,9 +71,7 @@ private extension Canvas.ViewController.Model {
     @discardableResult
     func bind() -> Disposable {
         let disposable = CompositeDisposable()
-        
-        
-        
+
         return disposable
     }
 }

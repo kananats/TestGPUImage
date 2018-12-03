@@ -10,6 +10,7 @@ import UIKit
 import AVFoundation
 import ReactiveSwift
 import ReactiveCocoa
+import KPlugin
 
 // MARK: Main
 extension Video {
@@ -70,7 +71,7 @@ internal extension Video.Player {
         let disposable = CompositeDisposable()
         
         disposable += self.model.url <~ model.url
-        disposable += self.model.offset <~ model.offset
+        disposable += self.model.offset <~> model.offset
         
         return disposable
     }

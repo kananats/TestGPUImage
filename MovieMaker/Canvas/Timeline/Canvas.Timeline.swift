@@ -109,22 +109,8 @@ internal extension Canvas.Timeline {
     func bind(with model: Canvas.ViewController.Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        disposable += model.url <~ self.model.index.map { [weak self] value -> URL? in
-            guard let `self` = self, let value = value else { return nil }
-            
-            switch `self`[value] {
-            case let video as Video:
-                return video.url
-                
-            case _ as Empty:
-                fatalError()
-                
-            default:
-                return nil
-            }
-        }
-
-        disposable += model.offset <~ self.model.offset.map { $0 ?? 0 }
+        disposable += model.url <~ self.model.url
+        disposable += model.offset <~> self.model.offset
         
         return disposable
     }
@@ -149,8 +135,23 @@ private extension Canvas.Timeline {
     func bind(with model: Model) -> Disposable {
         let disposable = CompositeDisposable()
         
-        // Converts normalized content offset into duration
-        disposable += model.seekBindingTarget <~ self.scrollView.reactive.normalizedContentOffset.map { $0.x }.map { Double($0) * self.contentWidth.value / Canvas.Timeline.widthPerSecond }
+        // Scrollview content offset -> seek -> timing offset
+        disposable += model.seekBindingTarget <~ self.scrollView.reactive.normalizedContentOffset.filterMap { [weak self] value in
+            guard let `self` = self,
+                `self`.scrollView.isTracking || `self`.scrollView.isDragging || `self`.scrollView.isDecelerating
+                else { return nil }
+            
+            return Double(value.x) * `self`.contentWidth.value / Canvas.Timeline.widthPerSecond
+        }
+        
+        // Timing offset -> scrollview content offset
+        disposable += model.offset.external.filterMap { value in
+            guard let value = value else { return nil }
+            
+            return CGPoint(x: value * Canvas.Timeline.widthPerSecond, y: 0)
+        }.startWithValues { value in
+            self.scrollView.setContentOffset(value, animated: false)
+        }
         
         // Observes contents being added
         disposable += model.contentAdded.observeValues { [weak self] content, index in
